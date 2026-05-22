@@ -3,6 +3,13 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod source;
+
+pub use source::{
+    map_sdk_error, schema_mismatch_stream_item, validate_readable_path, ContentTypeValidation,
+    ExecEventSource, SchemaPolicy, SchemaValidation, SourceInfo, EXPECTED_EXEC_CONTENT_TYPE,
+};
+
 /// Git repository that provides the pinned Monad Execution Events Rust SDK.
 pub const SDK_REPOSITORY: &str = "https://github.com/category-labs/monad";
 
@@ -13,7 +20,7 @@ pub const SDK_TAG: &str = "release/exec-events-sdk-v1.1";
 pub const SDK_COMMIT: &str = "b7c13e1565f40556cb717090eae245e34bb5c6e7";
 
 /// Static metadata for the pinned Monad Execution Events Rust SDK.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, serde::Serialize)]
 pub struct SdkMetadata {
     /// Upstream Git repository URL.
     pub repository: &'static str,

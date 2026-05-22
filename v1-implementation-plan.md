@@ -256,30 +256,30 @@ cargo test -p monad-mev-core
 
 ### WP-05: Event Source Abstraction And Schema Checks
 
-Status: [ ]
+Status: [x]
 
 Goal: define how snapshot and live sources expose event streams safely.
 
 Implementation tasks:
 
-- [ ] Define `ExecEventSource` trait or equivalent.
-- [ ] Define `SourceInfo` containing source kind, path/name, content type, schema hash, and SDK version.
-- [ ] Implement content-type validation.
-- [ ] Implement schema-hash validation.
-- [ ] Map SDK errors into framework errors.
-- [ ] Add `SchemaPolicy`:
-  - [ ] `RequireMatch`
-  - [ ] `Warn`
-  - [ ] `SkipCheck` only for debug/testing
-- [ ] Ensure schema mismatch can be returned as an error and also represented as `StreamItem::SchemaMismatch` when appropriate.
+- [x] Define `ExecEventSource` trait or equivalent.
+- [x] Define `SourceInfo` containing source kind, path/name, content type, schema hash, and SDK version.
+- [x] Implement content-type validation.
+- [x] Implement schema-hash validation.
+- [x] Map SDK errors into framework errors.
+- [x] Add `SchemaPolicy`:
+  - [x] `RequireMatch`
+  - [x] `Warn`
+  - [x] `SkipCheck` only for debug/testing
+- [x] Ensure schema mismatch can be returned as an error and also represented as `StreamItem::SchemaMismatch` when appropriate.
 
 Testing tasks:
 
-- [ ] Unit test matching schema hash.
-- [ ] Unit test mismatched schema hash.
-- [ ] Unit test missing/unreadable source path.
-- [ ] Unit test wrong content type if the SDK allows constructing a fixture.
-- [ ] Unit test error messages include expected and observed schema hashes.
+- [x] Unit test matching schema hash.
+- [x] Unit test mismatched schema hash.
+- [x] Unit test missing/unreadable source path.
+- [x] Unit test wrong content type if the SDK allows constructing a fixture.
+- [x] Unit test error messages include expected and observed schema hashes.
 
 Acceptance:
 

@@ -246,6 +246,10 @@ dependencies = [
 [[package]]
 name = "monad-mev-events"
 version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "serde",
+]
 
 [[package]]
 name = "num-traits"
