@@ -3,8 +3,12 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod snapshot;
 mod source;
 
+pub use snapshot::{
+    SnapshotDescriptor, SnapshotOpenOptions, SnapshotReader, SnapshotSource, SnapshotSummary,
+};
 pub use source::{
     map_sdk_error, schema_mismatch_stream_item, validate_readable_path, ContentTypeValidation,
     ExecEventSource, SchemaPolicy, SchemaValidation, SourceInfo, EXPECTED_EXEC_CONTENT_TYPE,

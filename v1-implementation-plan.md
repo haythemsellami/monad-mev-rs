@@ -289,35 +289,37 @@ cargo test -p monad-mev-events schema
 
 ### WP-06: Snapshot Event-Ring Source
 
-Status: [ ]
+Status: [x]
 
 Goal: read compressed snapshot event-ring files and expose framework stream items.
 
+Implementation note: V1 uses an SDK-compatible direct parser for compressed event-ring snapshots so normal workspace builds do not fetch the large upstream Monad SDK repository. Raw execution-event decoding remains in WP-07.
+
 Implementation tasks:
 
-- [ ] Implement `SnapshotSource::open(path)`.
-- [ ] Support explicit paths like `./snapshot.zst` and `/tmp/snapshot.zst`.
-- [ ] Preserve SDK path resolution behavior where relevant, but make CLI behavior obvious.
-- [ ] Read source metadata.
-- [ ] Iterate descriptors from the correct initial point.
-- [ ] Support owned payload mode.
-- [ ] Support end-of-source detection.
-- [ ] Add source summary counters.
-- [ ] Handle corrupt or truncated zstd files with clear errors.
+- [x] Implement `SnapshotSource::open(path)`.
+- [x] Support explicit paths like `./snapshot.zst` and `/tmp/snapshot.zst`.
+- [x] Preserve SDK path resolution behavior where relevant, but make CLI behavior obvious.
+- [x] Read source metadata.
+- [x] Iterate descriptors from the correct initial point.
+- [x] Support owned payload mode.
+- [x] Support end-of-source detection.
+- [x] Add source summary counters.
+- [x] Handle corrupt or truncated zstd files with clear errors.
 
 Testing tasks:
 
-- [ ] Unit test path validation.
-- [ ] Unit test missing file error.
-- [ ] Unit test unsupported extension warning or neutral behavior.
-- [ ] Snapshot integration test with real `.zst` file behind `MONAD_MEV_SNAPSHOT`.
-- [ ] Fixture-based test using normalized events if a tiny real snapshot is not available.
+- [x] Unit test path validation.
+- [x] Unit test missing file error.
+- [x] Unit test unsupported extension warning or neutral behavior.
+- [x] Snapshot integration test with real `.zst` file behind `MONAD_MEV_SNAPSHOT`.
+- [x] Fixture-based test using normalized events if a tiny real snapshot is not available.
 
 Acceptance:
 
 ```bash
 cargo test -p monad-mev-events snapshot
-MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test --test snapshot_replay -- --ignored
+MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test -p monad-mev-events --test snapshot_replay -- --ignored
 ```
 
 ### WP-07: Raw Event Conversion And Descriptor Metadata
@@ -947,10 +949,10 @@ MONAD_MEV_SNAPSHOT=./data/snapshot.zst
 
 Tests:
 
-- [ ] Open snapshot.
-- [ ] Validate content type.
-- [ ] Validate schema hash.
-- [ ] Count raw events.
+- [x] Open snapshot.
+- [x] Validate content type.
+- [x] Validate schema hash.
+- [x] Count raw events.
 - [ ] Count logs.
 - [ ] Decode basic DeFi events.
 - [ ] Verify no unexpected panic on unknown events.
@@ -959,7 +961,7 @@ Tests:
 Command:
 
 ```bash
-MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test --test snapshot_replay -- --ignored
+MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test -p monad-mev-events --test snapshot_replay -- --ignored
 ```
 
 ### 6.5 Live Integration Tests
