@@ -1,0 +1,31 @@
+# Rust build output
+/target/
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Local editor and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Coverage output
+/coverage/
+/target/llvm-cov-target/
+lcov.info
+tarpaulin-report.html
+
+# Local Monad Execution Events snapshots and run artifacts
+/data/
+/snapshots/
+/runs/
+*.zst
+*.jsonl
+
+# Temporary files
+*.tmp
+*.log
