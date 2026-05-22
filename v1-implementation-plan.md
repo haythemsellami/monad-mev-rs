@@ -491,35 +491,35 @@ cargo test -p monad-mev-events normalize
 
 ### WP-12: Built-In DeFi Decoders
 
-Status: [ ]
+Status: [x]
 
 Goal: decode the most useful common log events for V1 examples and strategies.
 
 Implementation tasks:
 
-- [ ] Define `DeFiEvent`.
-- [ ] Define `Erc20Transfer`.
-- [ ] Define `Erc20Approval`.
-- [ ] Define `DexSwap`.
-- [ ] Define `DexSync`.
-- [ ] Define `UnknownLog`.
-- [ ] Implement ERC20 `Transfer(address,address,uint256)`.
-- [ ] Implement ERC20 `Approval(address,address,uint256)`.
-- [ ] Implement Uniswap V2-style `Swap(address,uint256,uint256,uint256,uint256,address)`.
-- [ ] Implement Uniswap V2-style `Sync(uint112,uint112)`.
-- [ ] Implement basic Uniswap V3-style `Swap(address,address,int256,int256,uint160,uint128,int24)`.
-- [ ] Include decoder name and event signature in decoded output.
-- [ ] Preserve original `LogEvent`.
-- [ ] Never panic on malformed topics or data.
+- [x] Define `DeFiEvent`.
+- [x] Define `Erc20Transfer`.
+- [x] Define `Erc20Approval`.
+- [x] Define `DexSwap`.
+- [x] Define `DexSync`.
+- [x] Define `UnknownLog`.
+- [x] Implement ERC20 `Transfer(address,address,uint256)`.
+- [x] Implement ERC20 `Approval(address,address,uint256)`.
+- [x] Implement Uniswap V2-style `Swap(address,uint256,uint256,uint256,uint256,address)`.
+- [x] Implement Uniswap V2-style `Sync(uint112,uint112)`.
+- [x] Implement basic Uniswap V3-style `Swap(address,address,int256,int256,uint160,uint128,int24)`.
+- [x] Include decoder name and event signature in decoded output.
+- [x] Preserve original `LogEvent`.
+- [x] Never panic on malformed topics or data.
 
 Testing tasks:
 
-- [ ] Golden unit tests for each valid event signature.
-- [ ] Malformed tests for missing topics.
-- [ ] Malformed tests for wrong data length.
-- [ ] Malformed tests for invalid indexed/non-indexed layout.
-- [ ] Unknown signature test returns `UnknownLog`.
-- [ ] Round-trip JSON serialization tests for decoded event structs.
+- [x] Golden unit tests for each valid event signature.
+- [x] Malformed tests for missing topics.
+- [x] Malformed tests for wrong data length.
+- [x] Malformed tests for invalid indexed/non-indexed layout.
+- [x] Unknown signature test returns `UnknownLog`.
+- [x] Round-trip JSON serialization tests for decoded event structs.
 
 Acceptance:
 

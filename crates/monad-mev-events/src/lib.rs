@@ -4,6 +4,7 @@
 //! `monad-exec-events` dependencies will be activated.
 
 mod commit_state;
+mod defi;
 mod flow;
 mod health;
 mod normalize;
@@ -12,6 +13,11 @@ mod snapshot;
 mod source;
 
 pub use commit_state::{CommitStateIssue, CommitStateTracker, TrackedBlockState};
+pub use defi::{
+    decode_basic_defi_log, event_topic, DeFiEvent, DexSwap, DexSwapKind, DexSync, Erc20Approval,
+    Erc20Transfer, UnknownLog, ERC20_APPROVAL_SIGNATURE, ERC20_TRANSFER_SIGNATURE,
+    UNISWAP_V2_SWAP_SIGNATURE, UNISWAP_V2_SYNC_SIGNATURE, UNISWAP_V3_SWAP_SIGNATURE,
+};
 pub use flow::{
     TransactionBundle, TransactionFlowKey, TransactionFlowSummary, TransactionFlowUpdate,
     TxnFlowTracker,

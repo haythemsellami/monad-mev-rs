@@ -12,8 +12,8 @@ mod replay;
 
 pub use error::{Error, Result};
 pub use event::{
-    Address, BlockRef, CommitState, EventEnvelope, EventKind, EventMeta, EventSourceKind, FlowTags,
-    PayloadMode, RunMode, TxnRef, B256,
+    keccak256, Address, BlockRef, CommitState, EventEnvelope, EventKind, EventMeta,
+    EventSourceKind, FlowTags, PayloadMode, RunMode, TxnRef, B256, U256,
 };
 pub use health::{GapEvent, GapPolicy, PayloadExpired, SchemaMismatch, StreamItem};
 pub use replay::{ReplayClock, ReplayReport};
