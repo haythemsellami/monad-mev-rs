@@ -214,39 +214,39 @@ cargo run -p monad-mev-cli -- --help
 
 ### WP-04: Core Framework Types
 
-Status: [ ]
+Status: [x]
 
 Goal: implement stable framework-owned types before SDK details leak upward.
 
 Implementation tasks:
 
-- [ ] Add project error type.
-- [ ] Add `Result<T>` alias.
-- [ ] Add `StreamItem<T>`.
-- [ ] Add `EventEnvelope<T>`.
-- [ ] Add `EventMeta`.
-- [ ] Add `BlockRef`.
-- [ ] Add `TxnRef`.
-- [ ] Add `FlowTags`.
-- [ ] Add `CommitState`.
-- [ ] Add `EventSourceKind`.
-- [ ] Add `EventKind`.
-- [ ] Add `GapEvent`.
-- [ ] Add `PayloadExpired`.
-- [ ] Add `SchemaMismatch`.
-- [ ] Add `GapPolicy`.
-- [ ] Add `PayloadMode`.
-- [ ] Add `ReplayClock`.
-- [ ] Add `ReplayReport`.
-- [ ] Add serialization support where needed for CLI JSON output.
-- [ ] Add human-readable display formatting for errors and health events.
+- [x] Add project error type.
+- [x] Add `Result<T>` alias.
+- [x] Add `StreamItem<T>`.
+- [x] Add `EventEnvelope<T>`.
+- [x] Add `EventMeta`.
+- [x] Add `BlockRef`.
+- [x] Add `TxnRef`.
+- [x] Add `FlowTags`.
+- [x] Add `CommitState`.
+- [x] Add `EventSourceKind`.
+- [x] Add `EventKind`.
+- [x] Add `GapEvent`.
+- [x] Add `PayloadExpired`.
+- [x] Add `SchemaMismatch`.
+- [x] Add `GapPolicy`.
+- [x] Add `PayloadMode`.
+- [x] Add `ReplayClock`.
+- [x] Add `ReplayReport`.
+- [x] Add serialization support where needed for CLI JSON output.
+- [x] Add human-readable display formatting for errors and health events.
 
 Testing tasks:
 
-- [ ] Unit test `CommitState` ordering if strategy min-state checks use ordering.
-- [ ] Unit test serialization shape for public report and envelope metadata.
-- [ ] Unit test display messages for `GapEvent`, `PayloadExpired`, and `SchemaMismatch`.
-- [ ] Unit test default policies by run mode.
+- [x] Unit test `CommitState` ordering if strategy min-state checks use ordering.
+- [x] Unit test serialization shape for public report and envelope metadata.
+- [x] Unit test display messages for `GapEvent`, `PayloadExpired`, and `SchemaMismatch`.
+- [x] Unit test default policies by run mode.
 
 Acceptance:
 
