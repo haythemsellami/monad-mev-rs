@@ -12,7 +12,7 @@ mod replay;
 
 pub use error::{Error, Result};
 pub use event::{
-    BlockRef, CommitState, EventEnvelope, EventKind, EventMeta, EventSourceKind, FlowTags,
+    Address, BlockRef, CommitState, EventEnvelope, EventKind, EventMeta, EventSourceKind, FlowTags,
     PayloadMode, RunMode, TxnRef, B256,
 };
 pub use health::{GapEvent, GapPolicy, PayloadExpired, SchemaMismatch, StreamItem};

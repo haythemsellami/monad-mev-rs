@@ -456,32 +456,32 @@ cargo test -p monad-mev-events transaction_grouping
 
 ### WP-11: Chain Event Normalization
 
-Status: [ ]
+Status: [x]
 
 Goal: provide an EVM-oriented layer that is easier than raw execution events but not DeFi-specific.
 
 Implementation tasks:
 
-- [ ] Define `ChainEvent`.
-- [ ] Define `BlockEvent`.
-- [ ] Define `TransactionEvent`.
-- [ ] Define `LogEvent`.
-- [ ] Define `CallFrameEvent`.
-- [ ] Define `AccountAccessEvent`.
-- [ ] Define `StorageAccessEvent`.
-- [ ] Define `TxnOutputEvent`.
-- [ ] Define `CommitStateEvent`.
-- [ ] Convert raw `TxnLog` into `LogEvent`.
-- [ ] Preserve raw context in normalized events.
-- [ ] Add normalizer pipeline from `StreamItem<RawExecEvent>` to `StreamItem<ChainEvent>`.
+- [x] Define `ChainEvent`.
+- [x] Define `BlockEvent`.
+- [x] Define `TransactionEvent`.
+- [x] Define `LogEvent`.
+- [x] Define `CallFrameEvent`.
+- [x] Define `AccountAccessEvent`.
+- [x] Define `StorageAccessEvent`.
+- [x] Define `TxnOutputEvent`.
+- [x] Define `CommitStateEvent`.
+- [x] Convert raw `TxnLog` into `LogEvent`.
+- [x] Preserve raw context in normalized events.
+- [x] Add normalizer pipeline from `StreamItem<RawExecEvent>` to `StreamItem<ChainEvent>`.
 
 Testing tasks:
 
-- [ ] Unit test raw log normalization.
-- [ ] Unit test block boundary normalization.
-- [ ] Unit test commit event normalization.
-- [ ] Unit test malformed or unknown raw events do not panic.
-- [ ] Snapshot integration test counts logs from real snapshot.
+- [x] Unit test raw log normalization.
+- [x] Unit test block boundary normalization.
+- [x] Unit test commit event normalization.
+- [x] Unit test malformed or unknown raw events do not panic.
+- [x] Snapshot integration test counts logs from real snapshot.
 
 Acceptance:
 

@@ -1,5 +1,8 @@
 use monad_mev_core::StreamItem;
-use monad_mev_events::{ExecEventSource, SchemaPolicy, SnapshotSource, EXPECTED_EXEC_CONTENT_TYPE};
+use monad_mev_events::{
+    normalize_raw_event, raw_event_from_snapshot, ChainEvent, ExecEventSource, SchemaPolicy,
+    SnapshotSource, EXPECTED_EXEC_CONTENT_TYPE,
+};
 
 #[test]
 #[ignore = "requires MONAD_MEV_SNAPSHOT pointing to a real Monad snapshot .zst file"]
@@ -23,10 +26,17 @@ fn opens_snapshot_from_env_and_replays_raw_descriptors() {
     let mut events_seen = 0_u64;
     let mut gaps_seen = 0_u64;
     let mut expired_payloads = 0_u64;
+    let mut logs_seen = 0_u64;
 
     loop {
         match reader.next_item() {
-            StreamItem::Event(_) => events_seen += 1,
+            StreamItem::Event(envelope) => {
+                events_seen += 1;
+                let normalized = normalize_raw_event(raw_event_from_snapshot(envelope));
+                if matches!(normalized.payload, ChainEvent::Log(_)) {
+                    logs_seen += 1;
+                }
+            }
             StreamItem::Gap(_) => gaps_seen += 1,
             StreamItem::PayloadExpired(_) => expired_payloads += 1,
             StreamItem::SchemaMismatch(_) => panic!("schema validation is not part of raw replay"),
@@ -41,5 +51,9 @@ fn opens_snapshot_from_env_and_replays_raw_descriptors() {
     assert!(
         gaps_seen <= events_seen,
         "gap count should not exceed available descriptor count"
+    );
+    assert!(
+        logs_seen <= events_seen,
+        "log count should not exceed available descriptor count"
     );
 }

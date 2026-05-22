@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter};
 
-pub use alloy_primitives::B256;
+pub use alloy_primitives::{Address, B256};
 use serde::{Deserialize, Serialize};
 
 /// Normalized item that passed through the framework pipeline.

@@ -6,6 +6,7 @@
 mod commit_state;
 mod flow;
 mod health;
+mod normalize;
 mod raw;
 mod snapshot;
 mod source;
@@ -18,6 +19,11 @@ pub use flow::{
 pub use health::{
     action_for_gap_policy, GapObserver, GapPolicyOverride, SequenceTracker, StreamHealthAction,
     StreamHealthTracker, StreamHealthWarningSummary,
+};
+pub use normalize::{
+    fixture_log_payload, normalize_raw_event, normalize_stream_item, AccountAccessEvent,
+    BlockEvent, CallFrameEvent, ChainEvent, CommitStateEvent, LogEvent, StorageAccessEvent,
+    TransactionEvent, TxnOutputEvent, UnknownChainEvent,
 };
 pub use raw::{
     fixture_block_tag_payload, fixture_block_verified_payload, fixture_raw_envelope,
