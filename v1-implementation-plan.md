@@ -390,30 +390,30 @@ cargo test -p monad-mev-core gap
 
 ### WP-09: Commit-State Tracker
 
-Status: [ ]
+Status: [x]
 
 Goal: track Monad block lifecycle explicitly.
 
 Implementation tasks:
 
-- [ ] Implement `CommitStateTracker`.
-- [ ] On `BLOCK_START`, create proposed block state keyed by block ID and block-start seqno.
-- [ ] On `BLOCK_QC`, move block to voted.
-- [ ] On `BLOCK_FINALIZED`, move block to finalized.
-- [ ] On `BLOCK_VERIFIED`, mark block number verified.
-- [ ] Maintain mapping from block-start seqno flow tag to block ref.
-- [ ] Attach current commit state to envelopes.
-- [ ] Represent unknown or unresolved block context explicitly.
-- [ ] Detect invalid regressions or duplicate transitions.
-- [ ] Decide how long old block state remains in memory during replay/live observe.
+- [x] Implement `CommitStateTracker`.
+- [x] On `BLOCK_START`, create proposed block state keyed by block ID and block-start seqno.
+- [x] On `BLOCK_QC`, move block to voted.
+- [x] On `BLOCK_FINALIZED`, move block to finalized.
+- [x] On `BLOCK_VERIFIED`, mark block number verified.
+- [x] Maintain mapping from block-start seqno flow tag to block ref.
+- [x] Attach current commit state to envelopes.
+- [x] Represent unknown or unresolved block context explicitly.
+- [x] Detect invalid regressions or duplicate transitions.
+- [x] Decide how long old block state remains in memory during replay/live observe.
 
 Testing tasks:
 
-- [ ] Table-driven transition tests for proposed -> voted -> finalized -> verified.
-- [ ] Test finalized without prior local start is handled as unknown/block-number-only when needed.
-- [ ] Test duplicate state event is idempotent or reported according to chosen policy.
-- [ ] Test invalid regression does not corrupt state.
-- [ ] Test events scoped by flow tag receive the correct block state.
+- [x] Table-driven transition tests for proposed -> voted -> finalized -> verified.
+- [x] Test finalized without prior local start is handled as unknown/block-number-only when needed.
+- [x] Test duplicate state event is idempotent or reported according to chosen policy.
+- [x] Test invalid regression does not corrupt state.
+- [x] Test events scoped by flow tag receive the correct block state.
 
 Acceptance:
 

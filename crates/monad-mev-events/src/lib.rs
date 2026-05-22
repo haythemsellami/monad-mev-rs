@@ -3,11 +3,13 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod commit_state;
 mod health;
 mod raw;
 mod snapshot;
 mod source;
 
+pub use commit_state::{CommitStateIssue, CommitStateTracker, TrackedBlockState};
 pub use health::{
     action_for_gap_policy, GapObserver, GapPolicyOverride, SequenceTracker, StreamHealthAction,
     StreamHealthTracker, StreamHealthWarningSummary,
