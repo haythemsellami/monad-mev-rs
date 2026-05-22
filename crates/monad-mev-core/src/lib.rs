@@ -9,6 +9,7 @@ mod error;
 mod event;
 mod health;
 mod replay;
+mod strategy;
 
 pub use error::{Error, Result};
 pub use event::{
@@ -17,6 +18,10 @@ pub use event::{
 };
 pub use health::{GapEvent, GapPolicy, PayloadExpired, SchemaMismatch, StreamItem};
 pub use replay::{ReplayClock, ReplayReport};
+pub use strategy::{
+    run_strategy, Action, AlertAction, DryRunExecutor, ExecutionReceipt, Executor, GapDecision,
+    RecordAction, RecordingExecutor, Strategy, StrategyContext, SubmitTxDryRun,
+};
 
 /// Crate version, exposed for diagnostics.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

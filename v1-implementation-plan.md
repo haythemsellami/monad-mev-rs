@@ -608,35 +608,35 @@ cargo test -p monad-mev-events replay
 
 ### WP-15: Strategy API And Executors
 
-Status: [ ]
+Status: [x]
 
 Goal: let users write simple replay/live-observe strategies without production trading machinery.
 
 Implementation tasks:
 
-- [ ] Implement `Strategy` trait.
-- [ ] Implement `StrategyContext`.
-- [ ] Implement `GapDecision`.
-- [ ] Implement `Action`.
-- [ ] Implement `RecordAction`.
-- [ ] Implement `AlertAction`.
-- [ ] Implement `SubmitTxDryRun`.
-- [ ] Implement `Executor` trait.
-- [ ] Implement `RecordingExecutor`.
-- [ ] Implement `DryRunExecutor`.
-- [ ] Implement `ExecutionReceipt`.
-- [ ] Wire replay runner to strategy and executor.
-- [ ] Ensure V1 executors cannot submit transactions.
+- [x] Implement `Strategy` trait.
+- [x] Implement `StrategyContext`.
+- [x] Implement `GapDecision`.
+- [x] Implement `Action`.
+- [x] Implement `RecordAction`.
+- [x] Implement `AlertAction`.
+- [x] Implement `SubmitTxDryRun`.
+- [x] Implement `Executor` trait.
+- [x] Implement `RecordingExecutor`.
+- [x] Implement `DryRunExecutor`.
+- [x] Implement `ExecutionReceipt`.
+- [x] Wire replay runner to strategy and executor.
+- [x] Ensure V1 executors cannot submit transactions.
 
 Testing tasks:
 
-- [ ] Unit test strategy receives events in deterministic order.
-- [ ] Unit test strategy actions are sent to executor.
-- [ ] Unit test recording executor writes JSONL.
-- [ ] Unit test dry-run executor accepts well-formed actions.
-- [ ] Unit test dry-run executor rejects malformed actions.
-- [ ] Unit test gap callbacks.
-- [ ] Compile test for example strategy.
+- [x] Unit test strategy receives events in deterministic order.
+- [x] Unit test strategy actions are sent to executor.
+- [x] Unit test recording executor writes JSONL.
+- [x] Unit test dry-run executor accepts well-formed actions.
+- [x] Unit test dry-run executor rejects malformed actions.
+- [x] Unit test gap callbacks.
+- [x] Compile test for example strategy.
 
 Acceptance:
 
