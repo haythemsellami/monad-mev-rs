@@ -47,6 +47,110 @@ cargo run -p monad-mev-cli -- inspect monad-exec-events --live --duration 10s --
 On macOS this reports live mode as unavailable. Real live event rings require a
 Linux host with access to a Monad execution event ring.
 
+## Rust API Examples
+
+Inside this repository, example crates use local path dependencies. Adjust the
+relative paths for your crate location:
+
+```toml
+[dependencies]
+monad-mev-core = { path = "crates/monad-mev-core" }
+monad-mev-events = { path = "crates/monad-mev-events" }
+serde_json = "1.0"
+```
+
+Replay a deterministic fixture:
+
+```rust
+use monad_mev_events::{fixture_stream_items, load_workspace_fixture, ReplayConfig, ReplayRunner};
+
+fn main() -> monad_mev_core::Result<()> {
+    let fixture = load_workspace_fixture("raw-events.json")?;
+    let items = fixture_stream_items(&fixture)?;
+    let run = ReplayRunner::new(ReplayConfig::default()).run(items)?;
+
+    println!("{}", run.human_summary());
+    Ok(())
+}
+```
+
+Decode built-in DeFi logs:
+
+```rust
+use monad_mev_core::StreamItem;
+use monad_mev_events::{
+    decode_basic_defi_log, fixture_stream_items, load_workspace_fixture, ChainEvent, DeFiEvent,
+};
+
+fn main() -> monad_mev_core::Result<()> {
+    let fixture = load_workspace_fixture("defi-decoded.json")?;
+
+    for item in fixture_stream_items(&fixture)? {
+        let StreamItem::Event(event) = item else {
+            continue;
+        };
+        let ChainEvent::Log(log) = event.payload else {
+            continue;
+        };
+
+        if let DeFiEvent::Erc20Transfer(transfer) = decode_basic_defi_log(log) {
+            println!(
+                "transfer token={} from={} to={} value={}",
+                transfer.token, transfer.from, transfer.to, transfer.value
+            );
+        }
+    }
+
+    Ok(())
+}
+```
+
+Run a strategy with the recording executor:
+
+```rust
+use monad_mev_core::{
+    run_strategy, Action, EventEnvelope, RecordAction, RecordingExecutor, Result, Strategy,
+    StrategyContext,
+};
+use monad_mev_events::{fixture_stream_items, load_workspace_fixture, ChainEvent};
+
+#[derive(Default)]
+struct LogCounter;
+
+impl Strategy<ChainEvent> for LogCounter {
+    fn on_event(
+        &mut self,
+        _context: &mut StrategyContext,
+        event: &EventEnvelope<ChainEvent>,
+    ) -> Result<Vec<Action>> {
+        if !matches!(&event.payload, ChainEvent::Log(_)) {
+            return Ok(Vec::new());
+        }
+
+        Ok(vec![Action::Record(RecordAction {
+            topic: "log.seen".to_owned(),
+            payload: serde_json::json!({ "seqno": event.seqno() }),
+        })])
+    }
+}
+
+fn main() -> Result<()> {
+    let fixture = load_workspace_fixture("raw-events.json")?;
+    let items = fixture_stream_items(&fixture)?;
+    let mut strategy = LogCounter;
+    let mut executor = RecordingExecutor::default();
+    let mut context = StrategyContext::new("readme-example");
+
+    run_strategy(items, &mut strategy, &mut executor, &mut context)?;
+
+    print!("{}", executor.jsonl());
+    Ok(())
+}
+```
+
+V1 executors record or validate actions only. They do not sign or submit
+transactions.
+
 ## Development Process
 
 The current workflow is direct commits on `main`. Commits should group related
