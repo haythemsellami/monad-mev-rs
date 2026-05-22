@@ -276,6 +276,12 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 [[package]]
 name = "monad-mev-cli"
 version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-events",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "monad-mev-core"

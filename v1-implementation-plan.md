@@ -713,39 +713,39 @@ monad-mev strategy new /tmp/dex-swap-monitor
 
 ### WP-18: CLI Commands
 
-Status: [ ]
+Status: [x]
 
 Goal: provide the main V1 user interface.
 
 Implementation tasks:
 
-- [ ] Choose CLI parser crate.
-- [ ] Implement global flags:
-  - [ ] `--json`
-  - [ ] `--no-color`
-  - [ ] `--log-level`
-- [ ] Implement `doctor`.
-- [ ] Implement `inspect`.
-- [ ] Implement `decode`.
-- [ ] Implement `replay`.
-- [ ] Implement `strategy new`.
-- [ ] Implement stable exit codes.
-- [ ] Implement structured error output for `--json`.
-- [ ] Implement human-readable summaries.
-- [ ] Add shell completion only if cheap; otherwise delay.
+- [x] Choose CLI parser crate. V1 uses a small manual parser to avoid pulling a parser dependency before command shape stabilizes.
+- [x] Implement global flags:
+  - [x] `--json`
+  - [x] `--no-color`
+  - [x] `--log-level`
+- [x] Implement `doctor`.
+- [x] Implement `inspect`.
+- [x] Implement `decode`.
+- [x] Implement `replay`.
+- [x] Implement `strategy new`.
+- [x] Implement stable exit codes.
+- [x] Implement structured error output for `--json`.
+- [x] Implement human-readable summaries.
+- [x] Add shell completion only if cheap; otherwise delay. Delayed to V2 unless a parser crate is adopted.
 
 Testing tasks:
 
-- [ ] Use CLI integration tests with temp dirs.
-- [ ] Test `--help` for every command.
-- [ ] Test invalid command exits `2`.
-- [ ] Test missing snapshot exits `1`.
-- [ ] Test JSON output parses.
-- [ ] Test `doctor` reports live unavailable on non-Linux or missing ring without panicking.
-- [ ] Test `inspect` summary over fixture.
-- [ ] Test `decode` JSONL over fixture.
-- [ ] Test `replay` report over fixture.
-- [ ] Test `strategy new` idempotency/error behavior.
+- [x] Use CLI integration tests with temp dirs.
+- [x] Test `--help` for every command.
+- [x] Test invalid command exits `2`.
+- [x] Test missing snapshot exits `1`.
+- [x] Test JSON output parses.
+- [x] Test `doctor` reports live unavailable on non-Linux or missing ring without panicking.
+- [x] Test `inspect` summary over fixture.
+- [x] Test `decode` JSONL over fixture.
+- [x] Test `replay` report over fixture.
+- [x] Test `strategy new` idempotency/error behavior.
 
 Acceptance:
 
