@@ -73,4 +73,29 @@ impl ReplayReport {
     pub const fn record_gap(&mut self) {
         self.gaps += 1;
     }
+
+    /// Records one payload expiration.
+    pub const fn record_payload_expired(&mut self) {
+        self.payload_expired += 1;
+    }
+
+    /// Records one schema mismatch.
+    pub const fn record_schema_mismatch(&mut self) {
+        self.schema_mismatches += 1;
+    }
+
+    /// Records one observed block.
+    pub const fn record_block(&mut self) {
+        self.blocks_seen += 1;
+    }
+
+    /// Records one observed transaction.
+    pub const fn record_transaction(&mut self) {
+        self.transactions_seen += 1;
+    }
+
+    /// Records one observed log.
+    pub const fn record_log(&mut self) {
+        self.logs_seen += 1;
+    }
 }

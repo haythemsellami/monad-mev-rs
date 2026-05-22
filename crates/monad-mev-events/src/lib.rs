@@ -3,10 +3,15 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod health;
 mod raw;
 mod snapshot;
 mod source;
 
+pub use health::{
+    action_for_gap_policy, GapObserver, GapPolicyOverride, SequenceTracker, StreamHealthAction,
+    StreamHealthTracker, StreamHealthWarningSummary,
+};
 pub use raw::{
     fixture_block_tag_payload, fixture_block_verified_payload, fixture_raw_envelope,
     fixture_snapshot_descriptor, fixture_txn_header_start_payload, flow_tags_from_content_ext,

@@ -357,29 +357,29 @@ cargo test -p monad-mev-events raw_event
 
 ### WP-08: Stream Health, Gaps, Payload Expiration
 
-Status: [ ]
+Status: [x]
 
 Goal: make stream correctness failures impossible to ignore accidentally.
 
 Implementation tasks:
 
-- [ ] Implement sequence tracking.
-- [ ] Emit `GapEvent` when expected sequence differs from observed sequence.
-- [ ] Emit or return `PayloadExpired` when SDK reports expired payload.
-- [ ] Apply `GapPolicy` consistently.
-- [ ] Default snapshot replay to `FailFast`.
-- [ ] Default CLI inspect to `LogAndContinue` with warning summary.
-- [ ] Default live observe to `RiskOffThenFail`.
-- [ ] Count gaps and payload expirations in reports.
-- [ ] Ensure strategy `on_gap` can override or confirm policy decisions.
+- [x] Implement sequence tracking.
+- [x] Emit `GapEvent` when expected sequence differs from observed sequence.
+- [x] Emit or return `PayloadExpired` when SDK reports expired payload.
+- [x] Apply `GapPolicy` consistently.
+- [x] Default snapshot replay to `FailFast`.
+- [x] Default CLI inspect to `LogAndContinue` with warning summary.
+- [x] Default live observe to `RiskOffThenFail`.
+- [x] Count gaps and payload expirations in reports.
+- [x] Ensure strategy `on_gap` can override or confirm policy decisions.
 
 Testing tasks:
 
-- [ ] Table-driven tests for no gap, single gap, multi-event gap, restart-like sequence behavior if detectable.
-- [ ] Test snapshot `FailFast` exits non-zero on gap.
-- [ ] Test inspect can continue and report gap count.
-- [ ] Test payload expiration is counted.
-- [ ] Test strategy `on_gap` is called before fail/continue decision when applicable.
+- [x] Table-driven tests for no gap, single gap, multi-event gap, restart-like sequence behavior if detectable.
+- [x] Test snapshot `FailFast` exits non-zero on gap.
+- [x] Test inspect can continue and report gap count.
+- [x] Test payload expiration is counted.
+- [x] Test strategy `on_gap` is called before fail/continue decision when applicable.
 
 Acceptance:
 
