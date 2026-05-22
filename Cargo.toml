@@ -3,6 +3,10 @@ members = [
     "crates/monad-mev-cli",
     "crates/monad-mev-core",
     "crates/monad-mev-events",
+    "examples/dex-swap-monitor",
+    "examples/erc20-transfer-monitor",
+    "examples/raw-event-printer",
+    "examples/replay-strategy-test",
 ]
 resolver = "2"
 

@@ -143,6 +143,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "dex-swap-monitor"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-events",
+]
+
+[[package]]
 name = "digest"
 version = "0.11.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -157,6 +164,14 @@ name = "equivalent"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "877a4ace8713b0bcf2a4e7eec82529c029f1d0619886d18145fea96c3ffe5c0f"
+
+[[package]]
+name = "erc20-transfer-monitor"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-events",
+]
 
 [[package]]
 name = "find-msvc-tools"
@@ -402,6 +417,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "513962919efc330f829edb2535844d1b912b0fbe2ca165d613e4e8788bb05a5a"
 dependencies = [
  "rand_core 0.9.5",
+]
+
+[[package]]
+name = "raw-event-printer"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-events",
+]
+
+[[package]]
+name = "replay-strategy-test"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "serde_json",
 ]
 
 [[package]]

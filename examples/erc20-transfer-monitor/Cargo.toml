@@ -1,0 +1,15 @@
+[package]
+name = "erc20-transfer-monitor"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+monad-mev-core = { path = "../../crates/monad-mev-core" }
+monad-mev-events = { path = "../../crates/monad-mev-events" }
+
+[lints]
+workspace = true

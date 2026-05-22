@@ -681,33 +681,33 @@ cargo test --workspace golden
 
 ### WP-17: Strategy Scaffolding And Examples
 
-Status: [ ]
+Status: [x]
 
 Goal: make the framework learnable by reading and running small examples.
 
 Implementation tasks:
 
-- [ ] Add `examples/raw-event-printer`.
-- [ ] Add `examples/erc20-transfer-monitor`.
-- [ ] Add `examples/dex-swap-monitor`.
-- [ ] Add `examples/replay-strategy-test`.
-- [ ] Implement `monad-mev strategy new`.
-- [ ] Generated strategy should compile immediately.
-- [ ] Generated strategy should include a fixture-backed test.
-- [ ] Generated strategy should default to recording executor.
-- [ ] Examples should avoid production private keys or RPC submission.
+- [x] Add `examples/raw-event-printer`.
+- [x] Add `examples/erc20-transfer-monitor`.
+- [x] Add `examples/dex-swap-monitor`.
+- [x] Add `examples/replay-strategy-test`.
+- [x] Implement `monad-mev strategy new`.
+- [x] Generated strategy should compile immediately.
+- [x] Generated strategy should include a fixture-backed test.
+- [x] Generated strategy should default to recording executor.
+- [x] Examples should avoid production private keys or RPC submission.
 
 Testing tasks:
 
-- [ ] Compile all examples.
-- [ ] Test `strategy new` creates expected files in a temp dir.
-- [ ] Test generated strategy's tests pass.
-- [ ] Smoke test example over fixture replay.
+- [x] Compile all examples.
+- [x] Test `strategy new` creates expected files in a temp dir.
+- [x] Test generated strategy's tests pass.
+- [x] Smoke test example over fixture replay.
 
 Acceptance:
 
 ```bash
-cargo test --workspace --examples
+cargo test --workspace
 monad-mev strategy new /tmp/dex-swap-monitor
 ```
 

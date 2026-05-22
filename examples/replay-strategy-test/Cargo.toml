@@ -1,0 +1,15 @@
+[package]
+name = "replay-strategy-test"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[dependencies]
+monad-mev-core = { path = "../../crates/monad-mev-core" }
+serde_json = "1.0"
+
+[lints]
+workspace = true
