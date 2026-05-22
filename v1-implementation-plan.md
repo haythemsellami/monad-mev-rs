@@ -529,32 +529,32 @@ cargo test -p monad-mev-events defi_decoder
 
 ### WP-13: Generic ABI Decoder
 
-Status: [ ]
+Status: [x]
 
 Goal: let users decode protocol logs without waiting for built-in framework support.
 
 Implementation tasks:
 
-- [ ] Load ABI JSON from file.
-- [ ] Parse event definitions.
-- [ ] Build topic0 signature map.
-- [ ] Support address filtering.
-- [ ] Decode indexed fields.
-- [ ] Decode non-indexed data fields.
-- [ ] Represent decoded values in JSON-friendly form.
-- [ ] Return `DecodedAbiEvent`.
-- [ ] Include ABI name/source path in output.
-- [ ] Handle overloaded events correctly by topic signature.
-- [ ] Handle anonymous events explicitly: either support or reject with clear error.
+- [x] Load ABI JSON from file.
+- [x] Parse event definitions.
+- [x] Build topic0 signature map.
+- [x] Support address filtering.
+- [x] Decode indexed fields.
+- [x] Decode non-indexed data fields.
+- [x] Represent decoded values in JSON-friendly form.
+- [x] Return `DecodedAbiEvent`.
+- [x] Include ABI name/source path in output.
+- [x] Handle overloaded events correctly by topic signature.
+- [x] Handle anonymous events explicitly: either support or reject with clear error.
 
 Testing tasks:
 
-- [ ] Decode a simple ERC20 ABI event through generic path.
-- [ ] Decode custom event with mixed indexed/non-indexed fields.
-- [ ] Test unknown topic returns no match.
-- [ ] Test invalid ABI JSON returns clear error.
-- [ ] Test overloaded event signatures.
-- [ ] Test address filter includes/excludes expected logs.
+- [x] Decode a simple ERC20 ABI event through generic path.
+- [x] Decode custom event with mixed indexed/non-indexed fields.
+- [x] Test unknown topic returns no match.
+- [x] Test invalid ABI JSON returns clear error.
+- [x] Test overloaded event signatures.
+- [x] Test address filter includes/excludes expected logs.
 
 Acceptance:
 

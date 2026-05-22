@@ -3,6 +3,7 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod abi;
 mod commit_state;
 mod defi;
 mod flow;
@@ -12,6 +13,9 @@ mod raw;
 mod snapshot;
 mod source;
 
+pub use abi::{
+    AbiDecoder, AbiEventDefinition, AbiEventInput, AbiValue, DecodedAbiEvent, DecodedAbiField,
+};
 pub use commit_state::{CommitStateIssue, CommitStateTracker, TrackedBlockState};
 pub use defi::{
     decode_basic_defi_log, event_topic, DeFiEvent, DexSwap, DexSwapKind, DexSync, Erc20Approval,
