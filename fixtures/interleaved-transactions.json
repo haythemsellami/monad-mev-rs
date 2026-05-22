@@ -1,0 +1,19 @@
+{
+  "name": "interleaved-transactions",
+  "description": "Two transactions with interleaved log events.",
+  "events": [
+    { "seqno": 1, "kind": "txn_header_start", "block": 100, "txn": 0 },
+    { "seqno": 2, "kind": "txn_header_start", "block": 100, "txn": 1 },
+    { "seqno": 3, "kind": "txn_log", "block": 100, "txn": 0 },
+    { "seqno": 4, "kind": "txn_log", "block": 100, "txn": 1 },
+    { "seqno": 5, "kind": "txn_end", "block": 100, "txn": 0 },
+    { "seqno": 6, "kind": "txn_end", "block": 100, "txn": 1 }
+  ],
+  "expected_report": {
+    "events_seen": 6,
+    "events_decoded": 6,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 2
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "empty",
+  "description": "No events.",
+  "events": [],
+  "expected_report": {
+    "events_seen": 0,
+    "events_decoded": 0,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 0
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "malformed-logs",
+  "description": "Malformed log payload examples.",
+  "events": [
+    { "seqno": 1, "kind": "txn_log", "malformed": true, "data": "0x010203" }
+  ],
+  "expected_report": {
+    "events_seen": 1,
+    "events_decoded": 1,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 1
+  }
+}

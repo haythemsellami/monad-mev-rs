@@ -1,0 +1,15 @@
+{
+  "name": "gap",
+  "description": "Sequence gap example.",
+  "events": [
+    { "seqno": 1, "kind": "txn_log" },
+    { "seqno": 3, "kind": "txn_log" }
+  ],
+  "expected_report": {
+    "events_seen": 2,
+    "events_decoded": 2,
+    "gaps": 1,
+    "payload_expired": 0,
+    "logs_seen": 2
+  }
+}

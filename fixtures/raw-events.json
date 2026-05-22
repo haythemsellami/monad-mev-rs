@@ -1,0 +1,15 @@
+{
+  "name": "raw-events",
+  "description": "One block and one raw transaction log.",
+  "events": [
+    { "seqno": 1, "kind": "block_start", "block": 100 },
+    { "seqno": 2, "kind": "txn_log", "block": 100, "txn": 0 }
+  ],
+  "expected_report": {
+    "events_seen": 2,
+    "events_decoded": 2,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 1
+  }
+}

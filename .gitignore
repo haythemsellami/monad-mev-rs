@@ -25,6 +25,7 @@ tarpaulin-report.html
 /runs/
 *.zst
 *.jsonl
+!/fixtures/golden/*.jsonl
 
 # Temporary files
 *.tmp

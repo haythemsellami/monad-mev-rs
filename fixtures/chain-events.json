@@ -1,0 +1,17 @@
+{
+  "name": "chain-events",
+  "description": "Normalized chain event examples.",
+  "events": [
+    { "seqno": 1, "kind": "block_start", "block": 100 },
+    { "seqno": 2, "kind": "txn_header_start", "block": 100, "txn": 0 },
+    { "seqno": 3, "kind": "txn_log", "block": 100, "txn": 0 },
+    { "seqno": 4, "kind": "txn_end", "block": 100, "txn": 0 }
+  ],
+  "expected_report": {
+    "events_seen": 4,
+    "events_decoded": 4,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 1
+  }
+}

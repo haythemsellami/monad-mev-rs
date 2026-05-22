@@ -1,0 +1,17 @@
+{
+  "name": "commit-states",
+  "description": "Block lifecycle transition fixture.",
+  "events": [
+    { "seqno": 1, "kind": "block_start", "state": "proposed" },
+    { "seqno": 2, "kind": "block_qc", "state": "voted" },
+    { "seqno": 3, "kind": "block_finalized", "state": "finalized" },
+    { "seqno": 4, "kind": "block_verified", "state": "verified" }
+  ],
+  "expected_report": {
+    "events_seen": 4,
+    "events_decoded": 4,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 0
+  }
+}

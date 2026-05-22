@@ -1,0 +1,2 @@
+{"type":"record","topic":"seen","payload":{"seqno":1}}
+{"type":"record","topic":"seen","payload":{"seqno":2}}

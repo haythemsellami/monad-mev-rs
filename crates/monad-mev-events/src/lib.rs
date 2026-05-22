@@ -6,6 +6,7 @@
 mod abi;
 mod commit_state;
 mod defi;
+mod fixtures;
 mod flow;
 mod health;
 mod normalize;
@@ -22,6 +23,10 @@ pub use defi::{
     decode_basic_defi_log, event_topic, DeFiEvent, DexSwap, DexSwapKind, DexSync, Erc20Approval,
     Erc20Transfer, UnknownLog, ERC20_APPROVAL_SIGNATURE, ERC20_TRANSFER_SIGNATURE,
     UNISWAP_V2_SWAP_SIGNATURE, UNISWAP_V2_SYNC_SIGNATURE, UNISWAP_V3_SWAP_SIGNATURE,
+};
+pub use fixtures::{
+    fixture_path, fixture_root, load_fixture, load_golden, load_workspace_fixture, FixtureDocument,
+    FixtureReport,
 };
 pub use flow::{
     TransactionBundle, TransactionFlowKey, TransactionFlowSummary, TransactionFlowUpdate,

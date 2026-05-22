@@ -1,0 +1,21 @@
+{
+  "name": "defi-decoded",
+  "description": "Decoded ERC20 transfer fixture.",
+  "events": [
+    {
+      "seqno": 1,
+      "kind": "erc20_transfer",
+      "token": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "from": "0x1111111111111111111111111111111111111111",
+      "to": "0x2222222222222222222222222222222222222222",
+      "value": "100"
+    }
+  ],
+  "expected_report": {
+    "events_seen": 1,
+    "events_decoded": 1,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 1
+  }
+}

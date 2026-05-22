@@ -647,30 +647,30 @@ cargo test -p monad-mev-core executor
 
 ### WP-16: Fixtures, Golden Tests, And Normalized Test Data
 
-Status: [ ]
+Status: [x]
 
 Goal: keep CI deterministic without requiring large binary snapshots.
 
 Implementation tasks:
 
-- [ ] Define normalized fixture JSON schema.
-- [ ] Add small fixture for raw events.
-- [ ] Add small fixture for chain events.
-- [ ] Add small fixture for DeFi decoded events.
-- [ ] Add fixture with interleaved transactions.
-- [ ] Add fixture with malformed logs.
-- [ ] Add fixture with gap event.
-- [ ] Add fixture with commit-state transitions.
-- [ ] Add golden report for replay fixture.
-- [ ] Add helper to load fixtures in tests.
-- [ ] Document fixture schema in `fixtures/README.md`.
+- [x] Define normalized fixture JSON schema.
+- [x] Add small fixture for raw events.
+- [x] Add small fixture for chain events.
+- [x] Add small fixture for DeFi decoded events.
+- [x] Add fixture with interleaved transactions.
+- [x] Add fixture with malformed logs.
+- [x] Add fixture with gap event.
+- [x] Add fixture with commit-state transitions.
+- [x] Add golden report for replay fixture.
+- [x] Add helper to load fixtures in tests.
+- [x] Document fixture schema in `fixtures/README.md`.
 
 Testing tasks:
 
-- [ ] Golden report test.
-- [ ] Golden decoded JSONL test.
-- [ ] Golden action JSONL test.
-- [ ] Determinism test runs same fixture twice and compares stable output.
+- [x] Golden report test.
+- [x] Golden decoded JSONL test.
+- [x] Golden action JSONL test.
+- [x] Determinism test runs same fixture twice and compares stable output.
 
 Acceptance:
 
