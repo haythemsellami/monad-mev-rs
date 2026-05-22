@@ -10,6 +10,7 @@ mod flow;
 mod health;
 mod normalize;
 mod raw;
+mod replay;
 mod snapshot;
 mod source;
 
@@ -42,6 +43,7 @@ pub use raw::{
     RawBlockVerified, RawExecDescriptor, RawExecEvent, RawKnownEvent, RawTxnHeaderStart,
     RawUnknownExecEvent,
 };
+pub use replay::{event_matches_filter, ReplayConfig, ReplayFilter, ReplayRun, ReplayRunner};
 pub use snapshot::{
     SnapshotDescriptor, SnapshotOpenOptions, SnapshotReader, SnapshotSource, SnapshotSummary,
 };

@@ -3,6 +3,8 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
+use crate::{Error, Result};
+
 /// Clock behavior for deterministic or timed replay.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -14,6 +16,38 @@ pub enum ReplayClock {
     FixedDelay(Duration),
     /// Scale source timing by a multiplier.
     SpeedMultiplier(f64),
+}
+
+impl ReplayClock {
+    /// Parses replay speed strings such as `10x` and `1.5x`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error when the value is not a positive multiplier ending in `x`.
+    pub fn parse_speed_multiplier(value: &str) -> Result<Self> {
+        let Some(number) = value.strip_suffix('x') else {
+            return Err(Error::Message(format!(
+                "replay speed must end with `x`, got {value}"
+            )));
+        };
+        let multiplier = number.parse::<f64>().map_err(|err| {
+            Error::Message(format!("invalid replay speed multiplier {value}: {err}"))
+        })?;
+
+        if !multiplier.is_finite() || multiplier <= 0.0 {
+            return Err(Error::Message(format!(
+                "replay speed multiplier must be positive, got {value}"
+            )));
+        }
+
+        Ok(Self::SpeedMultiplier(multiplier))
+    }
+
+    /// Returns true when replay should avoid wall-clock sleeping.
+    #[must_use]
+    pub const fn is_deterministic_default(self) -> bool {
+        matches!(self, Self::AsFastAsPossible)
+    }
 }
 
 /// Aggregated replay counters and metadata.
@@ -97,5 +131,65 @@ impl ReplayReport {
     /// Records one observed log.
     pub const fn record_log(&mut self) {
         self.logs_seen += 1;
+    }
+
+    /// Returns a stable human summary of report counters.
+    #[must_use]
+    pub fn human_summary(&self) -> String {
+        format!(
+            "events={} decoded={} gaps={} payload_expired={} blocks={} txs={} logs={} actions={}",
+            self.events_seen,
+            self.events_decoded,
+            self.gaps,
+            self.payload_expired,
+            self.blocks_seen,
+            self.transactions_seen,
+            self.logs_seen,
+            self.actions_recorded
+        )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn replay_speed_parser_accepts_valid_multipliers() {
+        assert_eq!(
+            ReplayClock::parse_speed_multiplier("10x").expect("speed should parse"),
+            ReplayClock::SpeedMultiplier(10.0)
+        );
+        assert_eq!(
+            ReplayClock::parse_speed_multiplier("1.5x").expect("speed should parse"),
+            ReplayClock::SpeedMultiplier(1.5)
+        );
+    }
+
+    #[test]
+    fn replay_speed_parser_rejects_invalid_values() {
+        assert!(ReplayClock::parse_speed_multiplier("10").is_err());
+        assert!(ReplayClock::parse_speed_multiplier("0x").is_err());
+        assert!(ReplayClock::parse_speed_multiplier("-1x").is_err());
+        assert!(ReplayClock::parse_speed_multiplier("abcx").is_err());
+    }
+
+    #[test]
+    fn replay_report_aggregates_stable_counters() {
+        let mut report = ReplayReport::default();
+
+        report.record_event();
+        report.record_decoded_event();
+        report.record_gap();
+        report.record_payload_expired();
+        report.record_log();
+        report.record_block();
+        report.record_transaction();
+
+        assert_eq!(report.events_seen, 1);
+        assert_eq!(report.events_decoded, 1);
+        assert_eq!(report.gaps, 1);
+        assert_eq!(report.payload_expired, 1);
+        assert!(report.human_summary().contains("events=1"));
     }
 }

@@ -564,40 +564,40 @@ cargo test -p monad-mev-events abi_decoder
 
 ### WP-14: Replay Engine, Clocks, Filters, Reports
 
-Status: [ ]
+Status: [x]
 
 Goal: make deterministic snapshot replay the central V1 workflow.
 
 Implementation tasks:
 
-- [ ] Implement replay runner.
-- [ ] Support `ReplayClock::AsFastAsPossible`.
-- [ ] Support `ReplayClock::FixedDelay`.
-- [ ] Support `ReplayClock::SpeedMultiplier`.
+- [x] Implement replay runner.
+- [x] Support `ReplayClock::AsFastAsPossible`.
+- [x] Support `ReplayClock::FixedDelay`.
+- [x] Support `ReplayClock::SpeedMultiplier`.
 - [ ] Implement filters:
-  - [ ] `from_seqno`
-  - [ ] `to_seqno`
-  - [ ] `from_block`
-  - [ ] `to_block`
-  - [ ] `event_kind`
-  - [ ] `address`
-  - [ ] `topic0`
-  - [ ] `txn_idx`
-- [ ] Implement `ReplayReport` aggregation.
-- [ ] Support human summary output.
-- [ ] Support JSON report output.
-- [ ] Support JSONL event output.
-- [ ] Ensure replay is deterministic by default.
-- [ ] Ensure wall-clock options do not affect report content except timing fields.
+  - [x] `from_seqno`
+  - [x] `to_seqno`
+  - [x] `from_block`
+  - [x] `to_block`
+  - [x] `event_kind`
+  - [x] `address`
+  - [x] `topic0`
+  - [x] `txn_idx`
+- [x] Implement `ReplayReport` aggregation.
+- [x] Support human summary output.
+- [x] Support JSON report output.
+- [x] Support JSONL event output.
+- [x] Ensure replay is deterministic by default.
+- [x] Ensure wall-clock options do not affect report content except timing fields.
 
 Testing tasks:
 
-- [ ] Unit test every filter.
-- [ ] Unit test combined filters.
-- [ ] Unit test deterministic report across two runs.
-- [ ] Unit test speed parser: `10x`, `1.5x`, invalid values.
-- [ ] Unit test report counters for events, gaps, payload expiration, logs, decoded events, and actions.
-- [ ] Integration test replay over normalized fixture.
+- [x] Unit test every filter.
+- [x] Unit test combined filters.
+- [x] Unit test deterministic report across two runs.
+- [x] Unit test speed parser: `10x`, `1.5x`, invalid values.
+- [x] Unit test report counters for events, gaps, payload expiration, logs, decoded events, and actions.
+- [x] Integration test replay over normalized fixture.
 
 Acceptance:
 
