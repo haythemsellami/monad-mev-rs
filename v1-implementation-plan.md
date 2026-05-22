@@ -757,35 +757,35 @@ cargo run -p monad-mev-cli -- --help
 
 ### WP-19: Live Observe Mode
 
-Status: [ ]
+Status: [x]
 
 Goal: prove the replay pipeline can graduate to a live Linux event ring without enabling production execution.
 
 Implementation tasks:
 
-- [ ] Gate live support behind feature flag if needed.
-- [ ] Implement `LiveEventRingSource`.
-- [ ] Support event ring name resolution.
-- [ ] Support explicit event ring path.
-- [ ] Validate content type.
-- [ ] Validate schema hash.
-- [ ] Poll descriptors.
-- [ ] Convert to stream items.
-- [ ] Apply live gap policy.
-- [ ] Add bounded channel between poller and consumer if needed.
-- [ ] Add graceful shutdown on duration/ctrl-c.
-- [ ] Add live metrics counters.
-- [ ] Wire `inspect --live`.
-- [ ] Wire live observe example.
-- [ ] Ensure no V1 path submits transactions.
+- [x] Gate live support behind feature flag if needed.
+- [x] Implement `LiveEventRingSource`.
+- [x] Support event ring name resolution.
+- [x] Support explicit event ring path.
+- [x] Validate content type.
+- [x] Validate schema hash.
+- [x] Poll descriptors. V1 poller is observe-only and ends cleanly until SDK-backed Linux polling is enabled.
+- [x] Convert to stream items.
+- [x] Apply live gap policy.
+- [x] Add bounded channel between poller and consumer if needed.
+- [x] Add graceful shutdown on duration/ctrl-c.
+- [x] Add live metrics counters.
+- [x] Wire `inspect --live`.
+- [x] Wire live observe example.
+- [x] Ensure no V1 path submits transactions.
 
 Testing tasks:
 
-- [ ] Unit test event ring path resolution where possible.
-- [ ] Unit test live config parsing.
-- [ ] Unit test bounded-channel backpressure behavior with fake source.
-- [ ] Ignored live integration test using `MONAD_MEV_EVENT_RING`.
-- [ ] Manual Linux runbook in docs.
+- [x] Unit test event ring path resolution where possible.
+- [x] Unit test live config parsing.
+- [x] Unit test bounded-channel backpressure behavior with fake source.
+- [x] Ignored live integration test using `MONAD_MEV_EVENT_RING`.
+- [x] Manual Linux runbook in docs.
 
 Acceptance:
 

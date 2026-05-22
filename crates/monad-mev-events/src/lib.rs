@@ -9,6 +9,8 @@ mod defi;
 mod fixtures;
 mod flow;
 mod health;
+#[cfg(feature = "live")]
+mod live;
 mod normalize;
 mod raw;
 mod replay;
@@ -35,6 +37,13 @@ pub use flow::{
 pub use health::{
     action_for_gap_policy, GapObserver, GapPolicyOverride, SequenceTracker, StreamHealthAction,
     StreamHealthTracker, StreamHealthWarningSummary,
+};
+#[cfg(feature = "live")]
+pub use live::{
+    bounded_live_channel, default_event_ring_dir, host_supports_live_event_ring,
+    live_availability_reason, live_gap_policy_action, normalize_live_stream_item,
+    observe_fake_stream, parse_duration_millis, resolve_event_ring_path, LiveConfig,
+    LiveEventRingSource, LiveGapAction, LiveMetrics, DEFAULT_LIVE_RING_NAME,
 };
 pub use normalize::{
     fixture_log_payload, normalize_raw_event, normalize_stream_item, AccountAccessEvent,

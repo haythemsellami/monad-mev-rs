@@ -5,6 +5,7 @@ members = [
     "crates/monad-mev-events",
     "examples/dex-swap-monitor",
     "examples/erc20-transfer-monitor",
+    "examples/live-observe",
     "examples/raw-event-printer",
     "examples/replay-strategy-test",
 ]

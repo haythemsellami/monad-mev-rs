@@ -237,7 +237,11 @@ fn command_inspect(
     global: &GlobalOptions,
     args: &[String],
 ) -> std::result::Result<CliOutcome, CliError> {
-    let options = FixtureCommandOptions::parse("inspect", args)?;
+    let options = InspectOptions::parse(args)?;
+    if options.live {
+        return command_inspect_live(global, &options);
+    }
+
     let source = load_fixture_input(options.fixture.as_deref())?;
     let items = fixture_stream_items(&source.fixture).map_err(CliError::from)?;
     let run = ReplayRunner::new(ReplayConfig::default())
@@ -275,6 +279,56 @@ fn command_inspect(
         }
     }
     Ok(CliOutcome::ok(stdout))
+}
+
+fn command_inspect_live(
+    global: &GlobalOptions,
+    options: &InspectOptions,
+) -> std::result::Result<CliOutcome, CliError> {
+    let ring = options
+        .fixture
+        .clone()
+        .unwrap_or_else(|| "monad-exec-events".to_owned());
+    let duration_millis = options
+        .duration
+        .as_deref()
+        .map(parse_duration_millis)
+        .transpose()?;
+    let live_supported = cfg!(target_os = "linux");
+    let reason = if live_supported {
+        "live event-ring observation is available on this host"
+    } else {
+        "live event-ring observation requires Linux in V1"
+    };
+    let path = if ring.contains('/') {
+        PathBuf::from(&ring)
+    } else {
+        PathBuf::from("/dev/shm").join(&ring)
+    };
+
+    if global.json {
+        return json_outcome(&json!({
+            "command": "inspect",
+            "mode": "live",
+            "ring": ring,
+            "path": path,
+            "duration_millis": duration_millis,
+            "supported": live_supported,
+            "reason": reason,
+            "observe_only": true,
+        }));
+    }
+
+    Ok(CliOutcome::ok(format!(
+        "mode: live\nring: {ring}\npath: {}\nduration_millis: {}\nlive: {} ({reason})\nobserve_only: true\n",
+        path.display(),
+        duration_millis.map_or_else(|| "unbounded".to_owned(), |value| value.to_string()),
+        if live_supported {
+            "supported"
+        } else {
+            "unavailable"
+        },
+    )))
 }
 
 fn command_decode(
@@ -392,12 +446,15 @@ fn reject_extra_args(command: &str, args: &[String]) -> std::result::Result<(), 
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
-struct FixtureCommandOptions {
+struct InspectOptions {
     fixture: Option<String>,
+    live: bool,
+    duration: Option<String>,
+    summary: bool,
 }
 
-impl FixtureCommandOptions {
-    fn parse(command: &str, args: &[String]) -> std::result::Result<Self, CliError> {
+impl InspectOptions {
+    fn parse(args: &[String]) -> std::result::Result<Self, CliError> {
         let mut options = Self::default();
         let mut index = 0;
 
@@ -410,26 +467,32 @@ impl FixtureCommandOptions {
                 value if value.starts_with("--fixture=") => {
                     options.fixture = Some(value.trim_start_matches("--fixture=").to_owned());
                 }
-                "--summary" => {}
+                "--live" => options.live = true,
+                "--summary" => options.summary = true,
+                "--duration" => {
+                    index += 1;
+                    options.duration = Some(required_arg(args, index, "--duration")?.to_owned());
+                }
+                value if value.starts_with("--duration=") => {
+                    options.duration = Some(value.trim_start_matches("--duration=").to_owned());
+                }
                 value if value.starts_with('-') => {
-                    return Err(CliError::Usage(format!(
-                        "unknown {command} option `{value}`"
-                    )));
+                    return Err(CliError::Usage(format!("unknown inspect option `{value}`")));
                 }
                 value if options.fixture.is_none() => options.fixture = Some(value.to_owned()),
                 value => {
                     return Err(CliError::Usage(format!(
-                        "`{command}` received unexpected argument `{value}`"
+                        "`inspect` received unexpected argument `{value}`"
                     )));
                 }
             }
             index += 1;
         }
 
-        if options.fixture.is_none() {
-            return Err(CliError::Usage(format!(
-                "`{command}` requires --fixture <name-or-path>"
-            )));
+        if !options.live && options.fixture.is_none() {
+            return Err(CliError::Usage(
+                "`inspect` requires --fixture <name-or-path> unless --live is set".to_owned(),
+            ));
         }
         Ok(options)
     }
@@ -695,6 +758,31 @@ fn parse_b256(value: &str) -> std::result::Result<B256, CliError> {
         .map_err(|err| CliError::Usage(format!("invalid B256 `{value}`: {err}")))
 }
 
+fn parse_duration_millis(value: &str) -> std::result::Result<u64, CliError> {
+    let (number, multiplier) = if let Some(number) = value.strip_suffix("ms") {
+        (number, 1)
+    } else if let Some(number) = value.strip_suffix('s') {
+        (number, 1_000)
+    } else if let Some(number) = value.strip_suffix('m') {
+        (number, 60_000)
+    } else {
+        return Err(CliError::Usage(format!(
+            "duration `{value}` must end with `ms`, `s`, or `m`"
+        )));
+    };
+    let parsed = number
+        .parse::<u64>()
+        .map_err(|err| CliError::Usage(format!("invalid duration `{value}`: {err}")))?;
+    if parsed == 0 {
+        return Err(CliError::Usage(format!(
+            "duration `{value}` must be positive"
+        )));
+    }
+    parsed
+        .checked_mul(multiplier)
+        .ok_or_else(|| CliError::Usage(format!("duration `{value}` overflows milliseconds")))
+}
+
 fn json_error(error: &serde_json::Error) -> CliError {
     CliError::Runtime(format!("failed to serialize JSON: {error}"))
 }
@@ -848,6 +936,22 @@ mod tests {
         assert_eq!(outcome.exit_code, OK);
         assert!(outcome.stdout.contains("events: 2"));
         assert!(outcome.stdout.contains("txn_log: 1"));
+    }
+
+    #[test]
+    fn inspect_live_reports_observe_only_status() {
+        let outcome = run_cli([
+            "inspect",
+            "monad-exec-events",
+            "--live",
+            "--duration",
+            "10s",
+        ]);
+
+        assert_eq!(outcome.exit_code, OK);
+        assert!(outcome.stdout.contains("mode: live"));
+        assert!(outcome.stdout.contains("observe_only: true"));
+        assert!(outcome.stdout.contains("duration_millis: 10000"));
     }
 
     #[test]
