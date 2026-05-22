@@ -324,30 +324,30 @@ MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test -p monad-mev-events --test sna
 
 ### WP-07: Raw Event Conversion And Descriptor Metadata
 
-Status: [ ]
+Status: [x]
 
 Goal: convert SDK events into framework-owned raw events with descriptor context.
 
 Implementation tasks:
 
-- [ ] Define `RawExecEvent`.
-- [ ] Implement conversion from SDK copied event type to `RawExecEvent`.
-- [ ] Preserve unknown event types as `RawExecEvent::Unknown`.
-- [ ] Extract descriptor sequence number.
-- [ ] Extract record timestamp.
-- [ ] Extract payload size.
-- [ ] Extract flow tags.
-- [ ] Extract event kind.
-- [ ] Attach schema hash from source info.
-- [ ] Avoid exposing bindgen-generated payload names in high-level APIs.
-- [ ] Add debug formatting suitable for `inspect`.
+- [x] Define `RawExecEvent`.
+- [x] Implement conversion from SDK copied event type to `RawExecEvent`.
+- [x] Preserve unknown event types as `RawExecEvent::Unknown`.
+- [x] Extract descriptor sequence number.
+- [x] Extract record timestamp.
+- [x] Extract payload size.
+- [x] Extract flow tags.
+- [x] Extract event kind.
+- [x] Attach schema hash from source info.
+- [x] Avoid exposing bindgen-generated payload names in high-level APIs.
+- [x] Add debug formatting suitable for `inspect`.
 
 Testing tasks:
 
-- [ ] Unit test conversion for each event kind that can be fixture-built.
-- [ ] Unit test unknown event type is preserved.
-- [ ] Unit test descriptor metadata is carried into `EventMeta`.
-- [ ] Unit test timestamp conversion boundaries.
+- [x] Unit test conversion for each event kind that can be fixture-built.
+- [x] Unit test unknown event type is preserved.
+- [x] Unit test descriptor metadata is carried into `EventMeta`.
+- [x] Unit test timestamp conversion boundaries.
 
 Acceptance:
 

@@ -3,9 +3,17 @@
 //! This crate owns the V1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
+mod raw;
 mod snapshot;
 mod source;
 
+pub use raw::{
+    fixture_block_tag_payload, fixture_block_verified_payload, fixture_raw_envelope,
+    fixture_snapshot_descriptor, fixture_txn_header_start_payload, flow_tags_from_content_ext,
+    raw_event_from_snapshot, ExecEventType, RawBlockStart, RawBlockStateEvent, RawBlockTag,
+    RawBlockVerified, RawExecDescriptor, RawExecEvent, RawKnownEvent, RawTxnHeaderStart,
+    RawUnknownExecEvent,
+};
 pub use snapshot::{
     SnapshotDescriptor, SnapshotOpenOptions, SnapshotReader, SnapshotSource, SnapshotSummary,
 };

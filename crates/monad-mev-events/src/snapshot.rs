@@ -3,12 +3,15 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 use monad_mev_core::{
-    CommitState, Error, EventEnvelope, EventKind, EventMeta, EventSourceKind, FlowTags,
-    PayloadExpired, PayloadMode, Result, StreamItem, B256,
+    CommitState, Error, EventEnvelope, EventKind, EventMeta, EventSourceKind, PayloadExpired,
+    PayloadMode, Result, StreamItem, B256,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{validate_readable_path, ExecEventSource, SourceInfo, EXPECTED_EXEC_CONTENT_TYPE};
+use crate::{
+    flow_tags_from_content_ext, validate_readable_path, ExecEventSource, SourceInfo,
+    EXPECTED_EXEC_CONTENT_TYPE,
+};
 
 const ZSTD_MAGIC: [u8; 4] = [0x28, 0xb5, 0x2f, 0xfd];
 const RING_MAGIC: &[u8; 6] = b"RING01";
@@ -265,11 +268,7 @@ impl SnapshotReader<'_> {
                 source: EventSourceKind::Snapshot,
                 block: None,
                 txn: None,
-                flow: FlowTags {
-                    block_seqno: Some(record.content_ext[0]).filter(|value| *value != 0),
-                    txn_id: Some(record.content_ext[1]).filter(|value| *value != 0),
-                    account_index: Some(record.content_ext[2]).filter(|value| *value != 0),
-                },
+                flow: flow_tags_from_content_ext(record.content_ext),
                 commit_state: CommitState::Unknown,
                 schema_hash: self.source.info.schema_hash,
             },

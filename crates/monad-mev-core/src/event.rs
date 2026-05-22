@@ -188,10 +188,18 @@ impl Display for EventSourceKind {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EventKind {
+    /// No-op or empty event type.
+    None,
     /// Monad execution record error.
     RecordError,
     /// Block start event.
     BlockStart,
+    /// Block reject event.
+    BlockReject,
+    /// Block EVM performance enter marker.
+    BlockPerfEvmEnter,
+    /// Block EVM performance exit marker.
+    BlockPerfEvmExit,
     /// Block end event.
     BlockEnd,
     /// Block quorum-certificate event.
@@ -202,6 +210,18 @@ pub enum EventKind {
     BlockVerified,
     /// Transaction header start event.
     TxnHeaderStart,
+    /// Transaction access-list entry event.
+    TxnAccessListEntry,
+    /// Transaction authorization-list entry event.
+    TxnAuthListEntry,
+    /// Transaction header end marker.
+    TxnHeaderEnd,
+    /// Transaction reject event.
+    TxnReject,
+    /// Transaction EVM performance enter marker.
+    TxnPerfEvmEnter,
+    /// Transaction EVM performance exit marker.
+    TxnPerfEvmExit,
     /// Transaction EVM output event.
     TxnEvmOutput,
     /// Transaction log event.
@@ -229,13 +249,23 @@ pub enum EventKind {
 impl Display for EventKind {
     fn fmt(&self, formatter: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::None => formatter.write_str("none"),
             Self::RecordError => formatter.write_str("record_error"),
             Self::BlockStart => formatter.write_str("block_start"),
+            Self::BlockReject => formatter.write_str("block_reject"),
+            Self::BlockPerfEvmEnter => formatter.write_str("block_perf_evm_enter"),
+            Self::BlockPerfEvmExit => formatter.write_str("block_perf_evm_exit"),
             Self::BlockEnd => formatter.write_str("block_end"),
             Self::BlockQc => formatter.write_str("block_qc"),
             Self::BlockFinalized => formatter.write_str("block_finalized"),
             Self::BlockVerified => formatter.write_str("block_verified"),
             Self::TxnHeaderStart => formatter.write_str("txn_header_start"),
+            Self::TxnAccessListEntry => formatter.write_str("txn_access_list_entry"),
+            Self::TxnAuthListEntry => formatter.write_str("txn_auth_list_entry"),
+            Self::TxnHeaderEnd => formatter.write_str("txn_header_end"),
+            Self::TxnReject => formatter.write_str("txn_reject"),
+            Self::TxnPerfEvmEnter => formatter.write_str("txn_perf_evm_enter"),
+            Self::TxnPerfEvmExit => formatter.write_str("txn_perf_evm_exit"),
             Self::TxnEvmOutput => formatter.write_str("txn_evm_output"),
             Self::TxnLog => formatter.write_str("txn_log"),
             Self::TxnCallFrame => formatter.write_str("txn_call_frame"),
