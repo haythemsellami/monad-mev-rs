@@ -4,12 +4,17 @@
 //! `monad-exec-events` dependencies will be activated.
 
 mod commit_state;
+mod flow;
 mod health;
 mod raw;
 mod snapshot;
 mod source;
 
 pub use commit_state::{CommitStateIssue, CommitStateTracker, TrackedBlockState};
+pub use flow::{
+    TransactionBundle, TransactionFlowKey, TransactionFlowSummary, TransactionFlowUpdate,
+    TxnFlowTracker,
+};
 pub use health::{
     action_for_gap_policy, GapObserver, GapPolicyOverride, SequenceTracker, StreamHealthAction,
     StreamHealthTracker, StreamHealthWarningSummary,

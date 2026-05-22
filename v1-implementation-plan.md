@@ -423,29 +423,29 @@ cargo test -p monad-mev-events commit_state
 
 ### WP-10: Flow Tags And Transaction Grouping
 
-Status: [ ]
+Status: [x]
 
 Goal: support interleaved transaction events without assuming stream order equals transaction index order.
 
 Implementation tasks:
 
-- [ ] Implement `FlowTags` extraction from descriptors.
-- [ ] Implement transaction-flow key type: block-start seqno plus transaction id/index.
-- [ ] Implement `TxnFlowTracker`.
-- [ ] Track transaction header start/end.
-- [ ] Track transaction hash when available.
-- [ ] Attach transaction context to log/call/access events.
-- [ ] Provide helper to aggregate transaction events into a completed transaction bundle.
-- [ ] Make incomplete transaction flows visible in summaries.
-- [ ] Bound memory for live observe mode.
+- [x] Implement `FlowTags` extraction from descriptors.
+- [x] Implement transaction-flow key type: block-start seqno plus transaction id/index.
+- [x] Implement `TxnFlowTracker`.
+- [x] Track transaction header start/end.
+- [x] Track transaction hash when available.
+- [x] Attach transaction context to log/call/access events.
+- [x] Provide helper to aggregate transaction events into a completed transaction bundle.
+- [x] Make incomplete transaction flows visible in summaries.
+- [x] Bound memory for live observe mode.
 
 Testing tasks:
 
-- [ ] Build fixture with two interleaved transactions.
-- [ ] Verify per-transaction event order is preserved.
-- [ ] Verify transaction bundles complete correctly.
-- [ ] Verify orphan event with missing transaction header remains usable but marked incomplete.
-- [ ] Verify memory cleanup after transaction end.
+- [x] Build fixture with two interleaved transactions.
+- [x] Verify per-transaction event order is preserved.
+- [x] Verify transaction bundles complete correctly.
+- [x] Verify orphan event with missing transaction header remains usable but marked incomplete.
+- [x] Verify memory cleanup after transaction end.
 
 Acceptance:
 
