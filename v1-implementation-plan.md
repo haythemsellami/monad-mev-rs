@@ -182,28 +182,28 @@ Manual acceptance:
 
 ### WP-03: Workspace And Crate Skeleton
 
-Status: [ ]
+Status: [x]
 
 Goal: create the three V1 crates with clean ownership boundaries.
 
 Implementation tasks:
 
-- [ ] Create `crates/monad-mev-core`.
-- [ ] Create `crates/monad-mev-events`.
-- [ ] Create `crates/monad-mev-cli`.
-- [ ] Make `monad-mev-cli` produce the `monad-mev` binary.
-- [ ] Add crate-level docs describing each crate's responsibilities.
+- [x] Create `crates/monad-mev-core`.
+- [x] Create `crates/monad-mev-events`.
+- [x] Create `crates/monad-mev-cli`.
+- [x] Make `monad-mev-cli` produce the `monad-mev` binary.
+- [x] Add crate-level docs describing each crate's responsibilities.
 - [ ] Add feature flags:
-  - [ ] `sdk` or default SDK integration feature if useful.
-  - [ ] `live` for live event-ring support if live dependencies are platform-sensitive.
-  - [ ] `test-fixtures` for fixture helpers if needed.
-- [ ] Ensure only `monad-mev-events` depends directly on official Monad SDK crates.
-- [ ] Add a root prelude only after APIs stabilize; do not over-export early.
+  - [x] `sdk` or default SDK integration feature if useful.
+  - [x] `live` for live event-ring support if live dependencies are platform-sensitive.
+  - [x] `test-fixtures` for fixture helpers if needed.
+- [x] Ensure only `monad-mev-events` depends directly on official Monad SDK crates.
+- [x] Add a root prelude only after APIs stabilize; do not over-export early. No root prelude added in WP-03.
 
 Testing tasks:
 
-- [ ] Add one trivial unit test per crate.
-- [ ] Add compile test that `monad-mev-cli --help` can be built.
+- [x] Add one trivial unit test per crate.
+- [x] Add compile test that `monad-mev-cli --help` can be built.
 
 Acceptance:
 

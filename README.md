@@ -12,9 +12,9 @@ The V1 focus is replay-first development:
 
 V1 is not a production trading stack. Transaction submission, counterfactual simulation, private relays, risk engines, and full protocol state stores are intentionally delayed to V2.
 
-## Current Status
+## Project Plan
 
-The repository is in WP-01 bootstrap. See:
+V1 development follows:
 
 - [V1 spec](v1-spec.md)
 - [V1 implementation plan](v1-implementation-plan.md)

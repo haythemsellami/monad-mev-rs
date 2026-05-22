@@ -1,5 +1,5 @@
 [package]
-name = "monad-mev-events"
+name = "monad-mev-cli"
 version = "0.0.0"
 edition.workspace = true
 rust-version.workspace = true
@@ -7,11 +7,9 @@ license.workspace = true
 repository.workspace = true
 publish = false
 
-[features]
-default = []
-live = []
-sdk = []
-test-fixtures = []
+[[bin]]
+name = "monad-mev"
+path = "src/main.rs"
 
 [lints]
 workspace = true

@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/monad-mev-core", "crates/monad-mev-events"]
+members = [
+    "crates/monad-mev-cli",
+    "crates/monad-mev-core",
+    "crates/monad-mev-events",
+]
 resolver = "2"
 
 [workspace.package]
