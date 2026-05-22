@@ -1,0 +1,1329 @@
+# monad-mev-rs V1 Spec
+
+Status date: 2026-05-22
+
+## 1. Purpose
+
+`monad-mev-rs` is a Rust framework for building Monad searcher, monitoring, and MEV-style applications on top of Monad Execution Events.
+
+V1 should not try to be a full production trading stack. V1 should solve the first real developer problem:
+
+> Make Monad Execution Events usable on a developer workstation through deterministic snapshot replay, then let the same code path graduate to live Linux event-ring ingestion.
+
+The framework should hide the raw event-ring API by default, while still preserving the semantics that make Monad different from an Ethereum RPC/WebSocket stream: speculative block states, granular EVM events, transaction event interleaving, ring overwrite gaps, payload lifetime rules, and schema compatibility.
+
+## 2. Non-negotiable Source Facts
+
+The V1 design is based on the current Monad Execution Events documentation and Artemis architecture.
+
+### 2.1 Live data requires a colocated node process
+
+Monad Execution Events are published by the execution daemon into a shared-memory event ring. A consumer reads that shared-memory ring from a sidecar process on the same host.
+
+V1 must assume:
+
+- Live real-time ingestion requires Linux.
+- Live ingestion requires a Monad node whose execution daemon was started with `--exec-event-ring`.
+- A macOS laptop can be used for historical snapshot development, but not for live node ingestion.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events
+- https://docs.monad.xyz/execution-events/getting-started
+- https://docs.monad.xyz/execution-events/event-ring
+
+### 2.2 Snapshot replay already exists
+
+Snapshot event-ring files are compressed captures of live event rings. They are explicitly useful for development and testing because no active publisher is required.
+
+V1 must not claim to invent replay. The product value is making replay ergonomic and MEV-framework-friendly.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/getting-started/snapshot
+
+### 2.3 Replay is not counterfactual simulation
+
+Snapshot replay replays events that already happened. It does not answer "what would have happened if my bot submitted a different transaction at this point?"
+
+Counterfactual simulation requires an EVM, state hydration, correct Monad execution semantics, and a placement model. That is V2.
+
+### 2.4 Execution Events are granular
+
+Execution Events are not just Solidity logs. They include granular EVM activity such as block boundaries, transaction headers, account access, storage access, EVM output, logs, call frames, transaction end, and consensus state changes.
+
+V1 must expose raw and normalized layers, rather than only a DeFi-log layer.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/overview
+- https://blog.monad.xyz/blog/execution-events-sdk
+
+### 2.5 Blocks are speculative until commit-state events arrive
+
+Execution can publish data for blocks whose consensus outcome is not yet known. Monad exposes block state changes through events such as:
+
+- `BLOCK_START`: proposed state
+- `BLOCK_QC`: voted state
+- `BLOCK_FINALIZED`: finalized state
+- `BLOCK_VERIFIED`: verified/canonical absent hard fork
+
+V1 must model commit state explicitly.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/consensus-events
+
+### 2.6 Transaction event records may be interleaved
+
+Transactions are committed to a block in transaction-index order, but event records for different transactions can be interleaved. Events for one transaction remain ordered, but different transaction flows can race.
+
+V1 must never assume that event stream order is the same as transaction index order.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/advanced
+
+### 2.7 Ring overwrite and payload expiration are core semantics
+
+The event ring uses fixed-size descriptor and payload buffers. Slow consumers can miss descriptors or observe payload expiration. Sequence numbers are used to detect gaps.
+
+V1 must surface gaps as explicit stream items. It must not silently continue after a gap in replay mode.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/advanced
+
+### 2.8 Schema compatibility matters
+
+Execution event rings carry content type and schema hash metadata. A reader compiled against incompatible event payload definitions can misdecode bytes. V1 must check and report schema compatibility.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/event-ring
+
+### 2.9 SDK location/version changed
+
+The Monad Execution Events release notes say v1.1 moved the Rust SDK from the consensus repository to the execution repository. Some current getting-started examples still show older `monad-bft` dependency snippets for v1.0.
+
+V1 must pin an exact SDK source and version, document it, and keep the dependency isolated so it can be changed without rewriting the public framework API.
+
+Relevant docs:
+
+- https://docs.monad.xyz/execution-events/release-notes
+- https://docs.monad.xyz/execution-events/getting-started/rust
+
+### 2.10 Artemis is inspiration, not a dependency
+
+Artemis uses a clean event-processing pipeline:
+
+- Collectors turn external streams into framework events.
+- Strategies consume events and produce actions.
+- Executors process actions.
+
+V1 should borrow this mental model, but not copy Artemis internals. Monad needs different treatment for speculative block states, event-ring gaps, zero-copy filtering, and replay determinism.
+
+Reference:
+
+- https://github.com/paradigmxyz/artemis
+
+## 3. V1 Product Definition
+
+### 3.1 V1 one-liner
+
+A replay-first Rust framework and CLI for consuming Monad Execution Events, decoding useful EVM/DeFi activity, testing searcher strategies deterministically, and graduating the same event pipeline to live Linux event-ring ingestion.
+
+### 3.2 V1 users
+
+Primary:
+
+- Monad searchers who want to prototype strategies before deploying near a node.
+- Solidity and DeFi developers who understand logs, swaps, transfers, and liquidations but do not want to learn event-ring internals first.
+- Infrastructure developers building monitors, indexers, alerting systems, and replay-based analytics.
+
+Secondary:
+
+- Researchers who want deterministic historical event streams.
+- Teams preparing live bots but not ready for transaction submission.
+
+Not the target for V1:
+
+- Casual dapp developers who should use RPC, WebSocket, indexers, or third-party APIs.
+- Fully capitalized production searchers needing private relays, advanced simulation, and risk systems.
+
+### 3.3 V1 success criteria
+
+V1 is successful when a developer can:
+
+1. Install/build the CLI on macOS or Linux with documented system dependencies.
+2. Run `monad-mev doctor` and get useful environment diagnostics.
+3. Run `monad-mev inspect ./snapshot.zst --summary`.
+4. Run `monad-mev replay ./snapshot.zst --decode basic-defi --report ./run.json`.
+5. Write a small Rust strategy that handles decoded swaps/transfers.
+6. Run the strategy deterministically against a snapshot and compare output to a golden file.
+7. On Linux with a node, run the same raw event pipeline against a live event ring in observe-only mode.
+
+## 4. V1 Scope
+
+### 4.1 Included in V1
+
+V1 includes:
+
+- Rust workspace skeleton.
+- Stable public prelude for basic users.
+- Wrapper around Monad Execution Events SDK.
+- Snapshot event-ring reader.
+- Live event-ring reader in observe-only mode.
+- Event descriptor and schema validation.
+- Owned payload mode.
+- Limited zero-copy filtering for advanced users.
+- Stream items for events, gaps, payload expiration, schema mismatch, and source end.
+- Event normalization into framework envelopes.
+- Commit-state tracking.
+- Transaction-flow grouping helpers that handle interleaving.
+- Basic raw event printer.
+- Basic log decoder.
+- ERC20 `Transfer` and `Approval` decoders.
+- Uniswap V2-style `Swap` and `Sync` decoders.
+- Basic Uniswap V3-style `Swap` decoder by event signature and fields, without full pool math.
+- Generic ABI event decoder for user-provided ABIs.
+- Replay engine with deterministic clock.
+- Strategy trait for replay/live observe mode.
+- Dry-run and recording executors.
+- JSON/JSONL replay reports.
+- CLI commands: `doctor`, `inspect`, `replay`, `decode`, `strategy new`.
+- Examples: raw printer, ERC20 transfer monitor, DEX swap monitor, replay strategy test.
+- Golden replay test harness.
+- Documentation for macOS snapshot development.
+- Documentation for Linux live event-ring deployment.
+
+### 4.2 Excluded from V1
+
+V1 excludes:
+
+- Production transaction submission.
+- Private relay or bundle integration.
+- Local counterfactual Monad simulation.
+- Full state hydration from RPC or archive data.
+- Full liquidation bot.
+- Production risk engine.
+- Full DEX pool state and pricing engine.
+- CEX connectors.
+- Web dashboard.
+- Python bindings.
+- Remote replay service.
+- Running a Monad node on macOS.
+
+## 5. Repository Layout
+
+V1 should start smaller than the original broad product spec. Prefer fewer crates until the public API is validated.
+
+```text
+monad-mev-rs/
+|-- Cargo.toml
+|-- crates/
+|   |-- monad-mev-core/
+|   |-- monad-mev-events/
+|   `-- monad-mev-cli/
+|-- examples/
+|   |-- raw-event-printer/
+|   |-- erc20-transfer-monitor/
+|   |-- dex-swap-monitor/
+|   `-- replay-strategy-test/
+|-- fixtures/
+|   |-- README.md
+|   `-- normalized/
+|-- docs/
+|   |-- getting-started-snapshot.md
+|   |-- getting-started-live.md
+|   |-- event-semantics.md
+|   |-- writing-strategies.md
+|   |-- cli.md
+|   |-- troubleshooting.md
+|   `-- sdk-versioning.md
+`-- v1-spec.md
+```
+
+### 5.1 `monad-mev-core`
+
+Owns framework-level types and pipeline traits.
+
+Responsibilities:
+
+- Public error type.
+- `Result<T>` alias.
+- `StreamItem<T>`.
+- `EventEnvelope<T>`.
+- `CommitState`.
+- `EventSourceKind`.
+- `Strategy`.
+- `Executor`.
+- `ReplayReport`.
+- `Action`.
+- `StrategyContext`.
+- `ExecutionContext`.
+- `GapPolicy`.
+- `ReplayClock`.
+
+### 5.2 `monad-mev-events`
+
+Owns Monad SDK integration and event decoding.
+
+Responsibilities:
+
+- Dependency isolation for official Monad SDK crates.
+- Snapshot source.
+- Live event-ring source.
+- Descriptor metadata extraction.
+- Schema/content-type checks.
+- Owned payload conversion.
+- Zero-copy filtering facade.
+- Raw event envelope construction.
+- Commit-state tracker.
+- Transaction-flow grouping helpers.
+- Basic EVM log representation.
+- ABI event decoder.
+- Built-in ERC20 and DEX decoders.
+
+### 5.3 `monad-mev-cli`
+
+Owns user-facing CLI.
+
+Responsibilities:
+
+- `doctor`.
+- `inspect`.
+- `replay`.
+- `decode`.
+- `strategy new`.
+- JSON/JSONL output.
+- Human-readable summaries.
+- Exit code discipline for CI.
+
+## 6. Public API Shape
+
+The V1 API should optimize for clear default usage. Raw SDK details should be reachable, but not required.
+
+### 6.1 Minimal replay bot
+
+```rust
+use monad_mev_core::prelude::*;
+use monad_mev_events::{BasicDefiDecoder, SnapshotSource};
+
+#[derive(Default)]
+struct SwapPrinter;
+
+#[async_trait::async_trait]
+impl Strategy for SwapPrinter {
+    type Event = DeFiEvent;
+    type Action = Action;
+
+    async fn on_event(
+        &mut self,
+        event: EventEnvelope<Self::Event>,
+        _ctx: &mut StrategyContext,
+    ) -> Result<Vec<Self::Action>> {
+        if let DeFiEvent::DexSwap(swap) = event.payload {
+            println!("swap block={} tx={:?} pool={:?}", event.block_number(), event.txn_idx(), swap.pool);
+        }
+
+        Ok(Vec::new())
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    Replay::builder()
+        .source(SnapshotSource::open("./data/snapshot.zst")?)
+        .decoder(BasicDefiDecoder::default())
+        .strategy(SwapPrinter::default())
+        .executor(RecordingExecutor::default())
+        .run()
+        .await?;
+
+    Ok(())
+}
+```
+
+### 6.2 Live observe-only bot
+
+```rust
+let source = LiveEventRingSource::builder()
+    .event_ring_path("monad-exec-events")
+    .gap_policy(GapPolicy::RiskOffThenFail)
+    .payload_mode(PayloadMode::Owned)
+    .build()?;
+
+LiveObserve::builder()
+    .source(source)
+    .decoder(BasicDefiDecoder::default())
+    .strategy(SwapPrinter::default())
+    .executor(RecordingExecutor::default())
+    .run()
+    .await?;
+```
+
+V1 live mode is observe-only. It can emit actions to a recording executor, but it must not submit transactions.
+
+## 7. Core Data Model
+
+### 7.1 Stream item
+
+The framework must not expose a stream of only successful events.
+
+```rust
+pub enum StreamItem<T> {
+    Event(EventEnvelope<T>),
+    Gap(GapEvent),
+    PayloadExpired(PayloadExpired),
+    SchemaMismatch(SchemaMismatch),
+    SourceEnded,
+}
+```
+
+### 7.2 Event envelope
+
+Every normalized event should carry enough context for replay, debugging, grouping, and safety checks.
+
+```rust
+pub struct EventEnvelope<T> {
+    pub payload: T,
+    pub meta: EventMeta,
+}
+
+pub struct EventMeta {
+    pub seqno: u64,
+    pub record_epoch_nanos: u64,
+    pub event_kind: EventKind,
+    pub source: EventSourceKind,
+    pub block: Option<BlockRef>,
+    pub txn: Option<TxnRef>,
+    pub flow: FlowTags,
+    pub commit_state: CommitState,
+    pub schema_hash: Option<[u8; 32]>,
+}
+
+pub struct BlockRef {
+    pub block_id: B256,
+    pub proposed_block_number: u64,
+    pub block_start_seqno: u64,
+}
+
+pub struct TxnRef {
+    pub txn_idx: u64,
+    pub txn_hash: Option<B256>,
+}
+
+pub struct FlowTags {
+    pub block_seqno: Option<u64>,
+    pub txn_id: Option<u64>,
+    pub account_index: Option<u64>,
+}
+```
+
+### 7.3 Commit state
+
+```rust
+pub enum CommitState {
+    Unknown,
+    Proposed,
+    Voted,
+    Finalized,
+    Verified,
+    Abandoned,
+}
+```
+
+`Unknown` is allowed only when a source cannot infer state yet. Strategies must be able to declare a minimum commit state.
+
+### 7.4 Gap model
+
+```rust
+pub struct GapEvent {
+    pub expected_seqno: u64,
+    pub observed_seqno: u64,
+    pub missed_count: u64,
+    pub source: EventSourceKind,
+}
+
+pub enum GapPolicy {
+    FailFast,
+    LogAndContinue,
+    RiskOffThenFail,
+}
+```
+
+V1 defaults:
+
+| Mode | Default |
+|---|---|
+| Snapshot replay | `FailFast` |
+| CLI inspect | `LogAndContinue` with non-zero summary warning |
+| Live observe | `RiskOffThenFail` |
+| Unit tests | `FailFast` |
+
+### 7.5 Payload mode
+
+```rust
+pub enum PayloadMode {
+    Owned,
+    ZeroCopyFilter,
+}
+```
+
+V1 default is `Owned`.
+
+Zero-copy mode is exposed only as a lower-level API for filtering descriptors and payload references. It must document overwrite/lifetime limitations clearly.
+
+## 8. Event Layers
+
+V1 should expose three event layers.
+
+### 8.1 Raw execution event layer
+
+```rust
+pub enum RawExecEvent {
+    BlockStart(...),
+    BlockEnd(...),
+    BlockQc(...),
+    BlockFinalized(...),
+    BlockVerified(...),
+    TxnHeaderStart(...),
+    TxnEvmOutput(...),
+    TxnLog(...),
+    TxnCallFrame(...),
+    TxnEnd(...),
+    AccountAccess(...),
+    StorageAccess(...),
+    Unknown { event_type: u16, bytes: Bytes },
+}
+```
+
+The exact payload structs should wrap or convert from the official SDK types. V1 should avoid leaking bindgen-generated names in the high-level API.
+
+### 8.2 Chain event layer
+
+```rust
+pub enum ChainEvent {
+    Block(BlockEvent),
+    Transaction(TransactionEvent),
+    Log(LogEvent),
+    CallFrame(CallFrameEvent),
+    AccountAccess(AccountAccessEvent),
+    StorageAccess(StorageAccessEvent),
+    ReceiptLike(TxnOutputEvent),
+    CommitState(CommitStateEvent),
+}
+```
+
+This layer is for users who want EVM semantics but not DeFi protocol decoding.
+
+### 8.3 DeFi event layer
+
+```rust
+pub enum DeFiEvent {
+    Erc20Transfer(Erc20Transfer),
+    Erc20Approval(Erc20Approval),
+    DexSwap(DexSwap),
+    DexSync(DexSync),
+    AbiEvent(DecodedAbiEvent),
+    UnknownLog(LogEvent),
+}
+```
+
+V1 DeFi decoding is intentionally basic. It should be correct and deterministic, not comprehensive.
+
+## 9. Decoding Requirements
+
+### 9.1 Log representation
+
+```rust
+pub struct LogEvent {
+    pub address: Address,
+    pub topics: Vec<B256>,
+    pub data: Bytes,
+    pub removed: bool,
+}
+```
+
+`removed` should normally be false for raw execution events, but the field is useful when mapping to Ethereum-style expectations or future rollback handling.
+
+### 9.2 Built-in event signatures
+
+V1 must decode:
+
+- ERC20 `Transfer(address,address,uint256)`
+- ERC20 `Approval(address,address,uint256)`
+- Uniswap V2-style `Swap(address,uint256,uint256,uint256,uint256,address)`
+- Uniswap V2-style `Sync(uint112,uint112)`
+- Uniswap V3-style `Swap(address,address,int256,int256,uint160,uint128,int24)`
+
+### 9.3 Generic ABI decoder
+
+V1 should support user-provided ABI JSON files:
+
+```bash
+monad-mev decode ./snapshot.zst \
+  --abi ./abis/my-protocol.json \
+  --address 0x...
+```
+
+This should decode matching logs into a generic `DecodedAbiEvent`.
+
+### 9.4 Decoder behavior
+
+Decoders must:
+
+- Never panic on malformed data.
+- Return `UnknownLog` if no decoder matches.
+- Preserve original raw log context.
+- Include decoder name in decoded output.
+- Be deterministic across runs.
+
+## 10. Replay Engine
+
+### 10.1 Replay clocks
+
+V1 should support:
+
+```rust
+pub enum ReplayClock {
+    AsFastAsPossible,
+    FixedDelay(Duration),
+    SpeedMultiplier(f64),
+}
+```
+
+Manual step replay is useful, but can be delayed unless the CLI implementation is trivial.
+
+### 10.2 Replay filtering
+
+V1 CLI should support filters:
+
+- `--from-seqno`
+- `--to-seqno`
+- `--from-block`
+- `--to-block`
+- `--event-kind`
+- `--address`
+- `--topic0`
+- `--txn-idx`
+
+Block filtering must be implemented carefully because early speculative events identify blocks by block tag and flow tags, not just finalized block number.
+
+### 10.3 Replay report
+
+```rust
+pub struct ReplayReport {
+    pub source_path: PathBuf,
+    pub started_at: DateTime<Utc>,
+    pub finished_at: DateTime<Utc>,
+    pub events_seen: u64,
+    pub events_decoded: u64,
+    pub gaps: u64,
+    pub payload_expired: u64,
+    pub schema_mismatches: u64,
+    pub blocks_seen: u64,
+    pub transactions_seen: u64,
+    pub logs_seen: u64,
+    pub defi_events_seen: u64,
+    pub actions_recorded: u64,
+    pub strategy_errors: u64,
+}
+```
+
+CLI JSON report example:
+
+```json
+{
+  "source_path": "./snapshot.zst",
+  "events_seen": 1203944,
+  "events_decoded": 1203944,
+  "gaps": 0,
+  "payload_expired": 0,
+  "blocks_seen": 30,
+  "transactions_seen": 82310,
+  "logs_seen": 45331,
+  "defi_events_seen": 13775,
+  "actions_recorded": 893,
+  "strategy_errors": 0
+}
+```
+
+## 11. Strategy Framework
+
+### 11.1 Strategy trait
+
+```rust
+#[async_trait::async_trait]
+pub trait Strategy: Send {
+    type Event;
+    type Action;
+
+    async fn on_start(&mut self, _ctx: &mut StrategyContext) -> Result<()> {
+        Ok(())
+    }
+
+    async fn on_event(
+        &mut self,
+        event: EventEnvelope<Self::Event>,
+        ctx: &mut StrategyContext,
+    ) -> Result<Vec<Self::Action>>;
+
+    async fn on_gap(&mut self, gap: GapEvent, _ctx: &mut StrategyContext) -> Result<GapDecision> {
+        Ok(GapDecision::UsePolicyDefault(gap))
+    }
+
+    async fn on_finish(&mut self, _ctx: &mut StrategyContext) -> Result<()> {
+        Ok(())
+    }
+}
+```
+
+### 11.2 Strategy context
+
+```rust
+pub struct StrategyContext {
+    pub run_id: RunId,
+    pub mode: RunMode,
+    pub clock: Clock,
+    pub metrics: MetricsHandle,
+    pub min_commit_state: CommitState,
+}
+```
+
+V1 should avoid a heavy shared-state abstraction. Strategies can own their own state. Framework-level stores are V2.
+
+### 11.3 Actions
+
+```rust
+pub enum Action {
+    Record(RecordAction),
+    Alert(AlertAction),
+    SubmitTxDryRun(SubmitTxDryRun),
+    Noop,
+}
+```
+
+`SubmitTxDryRun` records intent only. It must not submit to RPC in V1.
+
+## 12. Executors
+
+### 12.1 Recording executor
+
+Records actions to memory and optionally JSONL.
+
+```bash
+monad-mev replay ./snapshot.zst \
+  --strategy dex-swap-monitor \
+  --actions-jsonl ./runs/actions.jsonl
+```
+
+### 12.2 Dry-run executor
+
+Validates that an action is structurally well-formed and records it. It does not call RPC and does not simulate EVM execution.
+
+### 12.3 Executor result
+
+```rust
+pub struct ExecutionReceipt {
+    pub action_id: ActionId,
+    pub status: ExecutionStatus,
+    pub message: Option<String>,
+}
+
+pub enum ExecutionStatus {
+    Recorded,
+    DryRunAccepted,
+    DryRunRejected,
+}
+```
+
+## 13. CLI Specification
+
+The CLI binary name is `monad-mev`.
+
+### 13.1 `doctor`
+
+Purpose: explain whether the current machine can build, replay, and/or consume live events.
+
+Command:
+
+```bash
+monad-mev doctor
+```
+
+Checks:
+
+- Rust toolchain present.
+- C compiler suitable for SDK build.
+- CMake present.
+- zstd library present.
+- libclang/bindgen setup likely usable.
+- macOS snapshot mode dependencies present.
+- Linux live mode dependencies present.
+- SDK dependency builds.
+- Snapshot file can be opened if `--snapshot` provided.
+- Live event ring path exists if `--event-ring-path` provided.
+- Event ring content type is execution events.
+- Event ring schema hash matches compiled SDK.
+
+Example output:
+
+```text
+monad-mev doctor
+
+Build environment
+  ok  rustc found
+  ok  cmake found
+  ok  zstd library found
+  ok  clang/libclang found
+
+Snapshot mode
+  ok  supported on this platform
+
+Live mode
+  warn live mode requires Linux and a Monad node
+  fail event ring not found: monad-exec-events
+
+SDK
+  ok  monad execution events SDK compiled
+  ok  schema hash available
+```
+
+Exit codes:
+
+- `0`: requested mode is usable.
+- `1`: requested mode is not usable.
+- `2`: invalid CLI usage.
+
+### 13.2 `inspect`
+
+Purpose: inspect a snapshot or live ring without writing a strategy.
+
+Commands:
+
+```bash
+monad-mev inspect ./snapshot.zst --summary
+monad-mev inspect ./snapshot.zst --event-kind txn-log --limit 20
+monad-mev inspect ./snapshot.zst --address 0x... --json
+monad-mev inspect monad-exec-events --live --duration 10s --summary
+```
+
+Required output fields:
+
+- Source type.
+- Schema hash.
+- First/last sequence observed.
+- Event counts by kind.
+- Gap count.
+- Payload expiration count.
+- Blocks observed.
+- Transactions observed.
+- Logs observed.
+
+### 13.3 `replay`
+
+Purpose: run a snapshot through decoders and optionally a strategy.
+
+Commands:
+
+```bash
+monad-mev replay ./snapshot.zst --decode basic-defi --summary
+monad-mev replay ./snapshot.zst --strategy examples/dex-swap-monitor --report ./runs/report.json
+monad-mev replay ./snapshot.zst --from-block 15000001 --to-block 15000031 --speed 10x
+```
+
+V1 supported output:
+
+- Human summary.
+- JSON report.
+- JSONL event stream.
+- JSONL action stream.
+
+### 13.4 `decode`
+
+Purpose: decode events without running a strategy.
+
+Commands:
+
+```bash
+monad-mev decode ./snapshot.zst --basic-defi --jsonl ./decoded.jsonl
+monad-mev decode ./snapshot.zst --abi ./abi.json --address 0x...
+```
+
+### 13.5 `strategy new`
+
+Purpose: scaffold a minimal replay strategy.
+
+Command:
+
+```bash
+monad-mev strategy new dex-swap-monitor
+```
+
+Generated layout:
+
+```text
+dex-swap-monitor/
+|-- Cargo.toml
+|-- src/
+|   `-- lib.rs
+|-- config.example.toml
+`-- tests/
+    `-- replay.rs
+```
+
+The generated test should use normalized JSON fixtures by default so it can run without a large binary snapshot.
+
+## 14. Live Ingestion in V1
+
+V1 live support is intentionally limited.
+
+### 14.1 Included
+
+- Open a configured live event ring.
+- Validate content type and schema hash.
+- Read descriptors and payloads.
+- Emit raw/chain/DeFi events through the same pipeline used by replay.
+- Track gaps.
+- Record metrics.
+- Shut down cleanly.
+
+### 14.2 Excluded
+
+- Transaction submission.
+- Automatic resync from RPC/archive.
+- Strategy capital management.
+- Local block production or fake live publisher.
+- Remote event streaming service.
+
+### 14.3 Live collector design
+
+Live polling should run in a dedicated task/thread. It should avoid forcing every event through heavy async machinery before basic filtering.
+
+Recommended V1 path:
+
+```text
+event ring poller
+  -> StreamItem<RawExecEvent>
+  -> optional decoder
+  -> bounded channel
+  -> strategy
+  -> recording/dry-run executor
+```
+
+If the bounded channel fills, the collector should increment a dropped/backpressure metric and follow the configured policy. For V1, fail-fast is acceptable.
+
+## 15. SDK and Dependency Policy
+
+### 15.1 SDK pinning
+
+V1 must pin the Monad Execution Events SDK to an exact tag or revision.
+
+The spec should be updated during implementation with the exact source:
+
+```toml
+[dependencies.monad-exec-events]
+git = "https://github.com/category-labs/monad"
+tag = "..."
+
+[dependencies.monad-event-ring]
+git = "https://github.com/category-labs/monad"
+tag = "..."
+```
+
+If the crates remain in a different repository for the chosen version, document that explicitly in `docs/sdk-versioning.md`.
+
+### 15.2 SDK isolation
+
+Only `monad-mev-events` should depend directly on Monad SDK crates. Other crates should depend on framework-owned types.
+
+### 15.3 License review
+
+Before publishing, resolve license implications of linking against Category Labs SDK code. The Monad execution and consensus repositories are GPL-3.0, so `monad-mev-rs` may need to be GPL-compatible if it links those crates directly.
+
+V1 deliverable must include a clear `LICENSE` decision and a `NOTICE`/dependency note if needed.
+
+## 16. Testing Strategy
+
+### 16.1 Unit tests
+
+Required:
+
+- Gap detection.
+- Payload expiration handling.
+- Schema mismatch handling.
+- Commit-state transitions.
+- Flow tag extraction.
+- Transaction grouping under interleaved event order.
+- ERC20 decoding.
+- Uniswap V2 decoding.
+- Uniswap V3 swap decoding.
+- Generic ABI decoder.
+- Replay report aggregation.
+- Strategy action recording.
+
+### 16.2 Fixture tests
+
+The repo should include small normalized JSON fixtures for CI.
+
+Reasons:
+
+- Binary snapshots may be large.
+- Snapshot licensing/distribution may be unclear.
+- Normalized fixtures make strategy tests fast.
+
+### 16.3 Snapshot integration tests
+
+Support ignored integration tests that run only when a snapshot path is provided:
+
+```bash
+MONAD_MEV_SNAPSHOT=./data/snapshot.zst cargo test --test snapshot_replay -- --ignored
+```
+
+These tests should verify:
+
+- Snapshot opens.
+- Schema matches.
+- Events can be counted.
+- Decode counts are deterministic.
+- Golden report matches expected output.
+
+### 16.4 Live tests
+
+Live tests are manual or Linux self-hosted only.
+
+```bash
+MONAD_MEV_EVENT_RING=monad-exec-events cargo test --test live_ring -- --ignored
+```
+
+They should verify:
+
+- Ring opens.
+- Content type is execution events.
+- Events can be read for a fixed duration.
+- Shutdown works.
+- Metrics are emitted.
+
+## 17. Documentation Requirements
+
+V1 docs must include:
+
+- `getting-started-snapshot.md`: build and run on macOS/Linux using a snapshot.
+- `getting-started-live.md`: Linux node/event-ring setup expectations.
+- `event-semantics.md`: speculative blocks, commit states, interleaving, gaps, schema hash.
+- `writing-strategies.md`: strategy trait, decoded events, recording actions.
+- `cli.md`: all CLI commands and output formats.
+- `troubleshooting.md`: compiler, zstd, libclang, CMake, schema mismatch, event ring path.
+- `sdk-versioning.md`: exact SDK version, repo, tag, compatibility notes.
+
+The first tutorial should be:
+
+> Build a DEX swap monitor from a snapshot.
+
+The second tutorial should be:
+
+> Run the same monitor against a live Linux event ring in observe-only mode.
+
+## 18. Milestones
+
+### Milestone 1: Workspace and SDK spike
+
+Deliverables:
+
+- Rust workspace.
+- `monad-mev-core`, `monad-mev-events`, `monad-mev-cli`.
+- Exact SDK dependency pinned.
+- SDK build documented.
+- `doctor` can check basic build dependencies.
+
+Acceptance:
+
+```bash
+cargo test
+monad-mev doctor
+```
+
+### Milestone 2: Snapshot inspect
+
+Deliverables:
+
+- Snapshot source.
+- Schema/content-type validation.
+- Descriptor iteration.
+- Owned raw event conversion.
+- `inspect --summary`.
+
+Acceptance:
+
+```bash
+monad-mev inspect ./snapshot.zst --summary
+```
+
+prints event counts and exits non-zero on schema mismatch.
+
+### Milestone 3: Normalization and decoding
+
+Deliverables:
+
+- Event envelope.
+- Flow tag extraction.
+- Commit-state tracker.
+- Chain log event model.
+- ERC20 decoder.
+- Uniswap V2 decoder.
+- Basic Uniswap V3 swap decoder.
+- Generic ABI decoder.
+- `decode` command.
+
+Acceptance:
+
+```bash
+monad-mev decode ./snapshot.zst --basic-defi --jsonl ./decoded.jsonl
+```
+
+produces deterministic decoded output.
+
+### Milestone 4: Replay strategies
+
+Deliverables:
+
+- Strategy trait.
+- Replay runner.
+- Recording executor.
+- Dry-run executor.
+- Replay report.
+- `strategy new`.
+- Example DEX swap monitor.
+- Golden test harness.
+
+Acceptance:
+
+```bash
+monad-mev replay ./snapshot.zst \
+  --strategy examples/dex-swap-monitor \
+  --report ./runs/report.json
+```
+
+records actions and produces a deterministic report.
+
+### Milestone 5: Live observe mode
+
+Deliverables:
+
+- Live event-ring source.
+- Live gap policy.
+- Live metrics.
+- Graceful shutdown.
+- `inspect --live`.
+- Example raw live printer.
+
+Acceptance:
+
+```bash
+monad-mev inspect monad-exec-events --live --duration 10s --summary
+```
+
+works on a Linux host running a Monad node with execution events enabled.
+
+### Milestone 6: V1 hardening
+
+Deliverables:
+
+- Docs complete.
+- CI for unit/fixture tests.
+- Snapshot integration tests documented.
+- License decision recorded.
+- Public API reviewed.
+- Examples compile.
+- CLI output stabilized.
+
+Acceptance:
+
+```bash
+cargo fmt --all -- --check
+cargo clippy --all-targets --all-features -- -D warnings
+cargo test --all
+```
+
+passes in the supported development environment.
+
+## 19. V1 Quality Bar
+
+V1 should be considered complete only if:
+
+- It does not hide speculative execution.
+- It does not silently ignore gaps.
+- It does not require users to understand bindgen payload types for normal use.
+- It can run useful workflows from snapshots.
+- It can produce deterministic replay reports.
+- It can open live rings in observe-only mode.
+- It has a clear SDK compatibility story.
+- It has enough examples for a Solidity/DeFi developer to start without reading the Monad SDK internals first.
+
+## 20. V2 and Delayed Features
+
+This section lists features intentionally delayed from V1.
+
+### 20.1 Counterfactual simulation
+
+Build local "what if my bot submitted this transaction" simulation.
+
+Likely components:
+
+- `monad-revm`
+- `alloy-monad-evm`
+- RPC-backed lazy state database
+- optional local state snapshots
+- placement model for transaction timing
+- simulation receipts and revert diagnostics
+
+Reason delayed:
+
+- Replay does not provide complete arbitrary state.
+- Accurate Monad semantics and state hydration are hard.
+- Bad simulation is worse than no simulation for trading decisions.
+
+### 20.2 Production executors
+
+Add real transaction submission.
+
+Potential executors:
+
+- RPC executor.
+- Synchronous/low-latency RPC executor if Monad exposes/standardizes one.
+- Private relay executor if available.
+- Bundle executor if available.
+- Composite simulate-then-submit executor.
+
+Reason delayed:
+
+- Requires risk controls, key management, nonce handling, replacement policy, and production testing.
+
+### 20.3 Risk engine
+
+Add capital-aware safety checks:
+
+- Max notional.
+- Max gas.
+- Min expected profit.
+- Max loss.
+- Deadline block.
+- Commit-state requirement.
+- Balance checks.
+- Nonce freshness.
+- Duplicate opportunity guard.
+- Protocol cooldown.
+- Circuit breaker.
+
+Reason delayed:
+
+- Meaningful only once transaction submission and simulation exist.
+
+### 20.4 Protocol state stores
+
+Add first-class state stores:
+
+- Pool reserves/liquidity.
+- Token metadata.
+- Lending collateral/debt.
+- Oracle prices.
+- Account health.
+- Block commit views.
+- Opportunity cache.
+
+Reason delayed:
+
+- V1 strategies can own local state.
+- Framework-level stores need careful rollback and commit-state semantics.
+
+### 20.5 Full liquidation strategy templates
+
+Add production-grade liquidation scaffolds for Monad lending protocols.
+
+Reason delayed:
+
+- Needs protocol-specific integrations, state stores, simulation, and execution safety.
+
+### 20.6 Advanced DEX engines
+
+Add full pricing and routing:
+
+- Uniswap V2 reserve math.
+- Uniswap V3 tick/liquidity state.
+- Uniswap V4 hooks if relevant on Monad.
+- Aggregator/router adapters.
+- Multi-hop route search.
+
+Reason delayed:
+
+- Requires state management and correctness work beyond log decoding.
+
+### 20.7 Multi-strategy graph engine
+
+Support routing multiple collectors to multiple strategies and executors.
+
+Reason delayed:
+
+- V1 should prove simple single-pipeline ergonomics first.
+
+### 20.8 Remote live event gateway
+
+Run a Linux sidecar near the node and stream normalized events to remote developer machines.
+
+Reason delayed:
+
+- Useful, but it creates a network protocol, auth, backpressure, and reliability surface.
+- It is not a replacement for colocated live HFT strategies.
+
+### 20.9 Snapshot corpus management
+
+Add commands to record, catalog, trim, label, and share snapshots.
+
+Reason delayed:
+
+- Distribution/licensing of real snapshots needs clarity.
+- V1 can work with user-provided snapshots and normalized fixtures.
+
+### 20.10 Persistent state and databases
+
+Add RocksDB/SQLite/Postgres-backed state.
+
+Reason delayed:
+
+- V1 can use in-memory state and output JSON/JSONL.
+
+### 20.11 Metrics backends
+
+Add Prometheus and OpenTelemetry exporters.
+
+Reason delayed:
+
+- V1 should expose internal counters and simple logs first.
+
+### 20.12 Dashboard and UI
+
+Add web UI for replay inspection, live monitoring, and strategy actions.
+
+Reason delayed:
+
+- CLI and JSON output are enough for V1.
+
+### 20.13 Python bindings
+
+Expose replay and decoded events to Python research workflows.
+
+Reason delayed:
+
+- Rust API and CLI should stabilize first.
+
+## 21. Open Questions Before Implementation
+
+1. Which exact Monad SDK tag/revision should V1 pin?
+2. What license should `monad-mev-rs` use if it links GPL-licensed SDK code?
+3. Is there an official tiny snapshot that can be used in tests or docs?
+4. Should `monad-mev-events` expose official SDK raw types behind a feature flag?
+5. Should V1 publish crates, or stay as a GitHub workspace until SDK versioning stabilizes?
+6. Which Monad DEX protocols should be used for real example decoders once ecosystem liquidity stabilizes?
+7. Should live observe mode be enabled by default, or behind a `live` cargo feature?
