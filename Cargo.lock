@@ -3,6 +3,10 @@
 version = 3
 
 [[package]]
+name = "monad-mev-cli"
+version = "0.0.0"
+
+[[package]]
 name = "monad-mev-core"
 version = "0.0.0"
 
