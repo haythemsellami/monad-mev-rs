@@ -1,0 +1,12 @@
+# Changelog
+
+## Unreleased
+
+- Added replay-first core event, health, replay, strategy, and executor APIs.
+- Added Monad execution event raw conversion and normalized chain events.
+- Added deterministic fixtures and golden outputs.
+- Added DeFi and generic ABI log decoding.
+- Added fixture-backed CLI commands: `doctor`, `inspect`, `decode`, `replay`,
+  and `strategy new`.
+- Added observe-only live event-ring scaffolding behind the `live` feature.
+- Added examples, docs, CI workflow, and release checklist for V1.

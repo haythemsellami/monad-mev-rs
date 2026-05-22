@@ -797,37 +797,37 @@ monad-mev inspect monad-exec-events --live --duration 10s --summary
 
 ### WP-20: Documentation, CI, Release Hardening
 
-Status: [ ]
+Status: [x]
 
 Goal: make V1 usable and maintainable after the first implementation pass.
 
 Implementation tasks:
 
-- [ ] Complete `docs/getting-started-snapshot.md`.
-- [ ] Complete `docs/getting-started-live.md`.
-- [ ] Complete `docs/event-semantics.md`.
-- [ ] Complete `docs/writing-strategies.md`.
-- [ ] Complete `docs/cli.md`.
-- [ ] Complete `docs/troubleshooting.md`.
-- [ ] Complete `docs/sdk-versioning.md`.
-- [ ] Add GitHub Actions or equivalent CI.
-- [ ] Add CI job for fmt.
-- [ ] Add CI job for clippy.
-- [ ] Add CI job for tests.
-- [ ] Add CI job for coverage.
-- [ ] Add ignored snapshot/live test documentation.
-- [ ] Add release checklist.
-- [ ] Add changelog.
-- [ ] Review public API names.
-- [ ] Review error messages.
-- [ ] Review docs for claims about Monad platform support.
+- [x] Complete `docs/getting-started-snapshot.md`.
+- [x] Complete `docs/getting-started-live.md`.
+- [x] Complete `docs/event-semantics.md`.
+- [x] Complete `docs/writing-strategies.md`.
+- [x] Complete `docs/cli.md`.
+- [x] Complete `docs/troubleshooting.md`.
+- [x] Complete `docs/sdk-versioning.md`.
+- [x] Add GitHub Actions or equivalent CI.
+- [x] Add CI job for fmt.
+- [x] Add CI job for clippy.
+- [x] Add CI job for tests.
+- [x] Add CI job for coverage.
+- [x] Add ignored snapshot/live test documentation.
+- [x] Add release checklist.
+- [x] Add changelog.
+- [x] Review public API names.
+- [x] Review error messages.
+- [x] Review docs for claims about Monad platform support.
 
 Testing tasks:
 
-- [ ] Run full local verification.
-- [ ] Run CI from clean checkout.
-- [ ] Run docs examples or doctests where practical.
-- [ ] Verify README quickstart works.
+- [x] Run full local verification.
+- [x] Run CI-equivalent commands locally; remote GitHub CI will run after push.
+- [x] Run docs examples or doctests where practical.
+- [x] Verify README quickstart works.
 
 Acceptance:
 

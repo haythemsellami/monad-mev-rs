@@ -1,8 +1,8 @@
 # Documentation
 
-This directory will hold V1 user and developer documentation.
+This directory holds V1 user and developer documentation.
 
-Planned documents:
+Core documents:
 
 - `getting-started-snapshot.md`
 - `getting-started-live.md`
@@ -11,5 +11,10 @@ Planned documents:
 - `cli.md`
 - `troubleshooting.md`
 - `sdk-versioning.md`
+- `live-linux-runbook.md`
+- `ignored-tests.md`
+- `v1-hardening-review.md`
+- `release-checklist.md`
 
-The first complete tutorial should show how to build a DEX swap monitor from a snapshot. The second should show how the same monitor runs against a live Linux event ring in observe-only mode.
+Start with the snapshot tutorial for local development. Use the live guide only
+on Linux hosts that can access a Monad execution event ring.

@@ -1,0 +1,26 @@
+# V1 Hardening Review
+
+## Public API Names
+
+The V1 public surface is split by crate ownership:
+
+- `monad-mev-core`: framework-neutral event metadata, stream health, replay
+  reports, strategies, actions, and executors.
+- `monad-mev-events`: Monad execution event ingestion, raw conversion,
+  normalization, fixture loading, replay runner, DeFi/ABI decoding, and live
+  observe scaffolding.
+- `monad-mev-cli`: command execution and process I/O boundary.
+
+Names intentionally keep source-specific terms in `monad-mev-events` and keep
+strategy/executor terms in `monad-mev-core`.
+
+## Error Messages
+
+V1 errors should name the failing input and expected shape. CLI usage errors
+exit `2`; runtime errors exit `1`; `--json` emits structured error objects.
+
+## Platform Claims
+
+Docs and CLI output must state that real live event rings require Linux. macOS
+is supported for fixtures, examples, CLI diagnostics, generated strategies, and
+snapshot-oriented local development.
