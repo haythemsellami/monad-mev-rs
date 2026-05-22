@@ -921,19 +921,23 @@ If the bounded channel fills, the collector should increment a dropped/backpress
 
 V1 must pin the Monad Execution Events SDK to an exact tag or revision.
 
-The spec should be updated during implementation with the exact source:
+V1 pins the SDK to the execution repository v1.1 tag:
 
 ```toml
 [dependencies.monad-exec-events]
 git = "https://github.com/category-labs/monad"
-tag = "..."
+tag = "release/exec-events-sdk-v1.1"
 
 [dependencies.monad-event-ring]
 git = "https://github.com/category-labs/monad"
-tag = "..."
+tag = "release/exec-events-sdk-v1.1"
 ```
 
-If the crates remain in a different repository for the chosen version, document that explicitly in `docs/sdk-versioning.md`.
+The tag currently resolves to commit `b7c13e1565f40556cb717090eae245e34bb5c6e7`.
+
+The SDK-backed APIs remain behind the `monad-mev-events/sdk` feature for V1 so default development checks do not require fetching the large upstream repository and native SDK toolchain. WP-02 records the exact dependency pin; active git dependencies may be enabled later once the ingestion work packages settle the fetch/vendor strategy.
+
+See `docs/sdk-versioning.md`.
 
 ### 15.2 SDK isolation
 
@@ -941,7 +945,7 @@ Only `monad-mev-events` should depend directly on Monad SDK crates. Other crates
 
 ### 15.3 License review
 
-Before publishing, resolve license implications of linking against Category Labs SDK code. The Monad execution and consensus repositories are GPL-3.0, so `monad-mev-rs` may need to be GPL-compatible if it links those crates directly.
+The Monad execution and consensus repositories are GPL-3.0 licensed, and SDK source files carry GPL-3.0-or-later headers. Because `monad-mev-rs` links those crates directly when the `sdk` feature is enabled, V1 uses `GPL-3.0-or-later`.
 
 V1 deliverable must include a clear `LICENSE` decision and a `NOTICE`/dependency note if needed.
 

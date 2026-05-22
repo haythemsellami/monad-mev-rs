@@ -141,38 +141,44 @@ cargo fmt --all -- --check
 
 ### WP-02: SDK Pinning, License Decision, Dependency Isolation
 
-Status: [ ]
+Status: [x]
 
 Goal: make the Monad SDK dependency explicit, isolated, and legally understood.
 
 Implementation tasks:
 
-- [ ] Identify the exact SDK repository and tag/revision for V1.
-- [ ] Confirm whether `monad-event-ring` and `monad-exec-events` come from `category-labs/monad` or another repository for the chosen version.
-- [ ] Add SDK dependencies only inside `crates/monad-mev-events`.
-- [ ] Create `docs/sdk-versioning.md`.
-- [ ] Document the SDK tag/revision.
-- [ ] Document the schema-hash compatibility policy.
-- [ ] Document platform dependencies for macOS snapshot mode.
-- [ ] Document platform dependencies for Linux live mode.
-- [ ] Decide project license based on SDK linking implications.
-- [ ] Add root `LICENSE` and, if needed, `NOTICE`.
+- [x] Identify the exact SDK repository and tag/revision for V1.
+- [x] Confirm whether `monad-event-ring` and `monad-exec-events` come from `category-labs/monad` or another repository for the chosen version.
+- [x] Record SDK dependency declarations only inside `crates/monad-mev-events`; active git dependencies are deferred because Cargo fetches upstream submodules during ordinary lockfile resolution.
+- [x] Create `docs/sdk-versioning.md`.
+- [x] Document the SDK tag/revision.
+- [x] Document the schema-hash compatibility policy.
+- [x] Document platform dependencies for macOS snapshot mode.
+- [x] Document platform dependencies for Linux live mode.
+- [x] Decide project license based on SDK linking implications.
+- [x] Add root `LICENSE` and, if needed, `NOTICE`.
+- [x] Reserve the `monad-mev-events/sdk` feature for SDK-backed APIs so default checks stay usable without fetching/building the upstream SDK.
 
 Testing tasks:
 
-- [ ] Add a compile-only test or crate-level test that proves SDK crates build through `monad-mev-events`.
-- [ ] Add a test that exposes the compiled SDK schema hash through a framework-owned API.
+- [x] Add a compile-only reserved SDK feature path through `monad-mev-events`.
+- [x] Add SDK metadata tests that pass without the native SDK toolchain.
+- [x] Document the schema hash API that should be exposed once active SDK deps are enabled.
+- [x] Document that the first SDK-backed build can be slow because Cargo fetches upstream submodules.
 
 Acceptance:
 
 ```bash
 cargo test -p monad-mev-events sdk
+cargo test -p monad-mev-events --features sdk sdk
 ```
+
+The active upstream SDK dependency build is intentionally deferred. During WP-02, enabling active optional git dependencies still caused ordinary Cargo tests to fetch upstream submodules. Revisit this before WP-05.
 
 Manual acceptance:
 
-- [ ] `docs/sdk-versioning.md` names exact SDK source and version.
-- [ ] License decision is visible in root files.
+- [x] `docs/sdk-versioning.md` names exact SDK source and version.
+- [x] License decision is visible in root files.
 
 ### WP-03: Workspace And Crate Skeleton
 
