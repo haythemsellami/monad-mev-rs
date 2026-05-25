@@ -1,9 +1,9 @@
 # monad-mev-rs
 
-`monad-mev-rs` is a V1 Rust framework for building Monad searcher,
-monitoring, and MEV-style applications on top of Monad Execution Events.
+`monad-mev-rs` is an Execution Events-first Rust framework for building Monad
+searcher, monitoring, and MEV-style applications.
 
-The V1 focus is replay-first development:
+The current v0.1 focus is replay-first development:
 
 - Inspect historical Monad Execution Events snapshots.
 - Normalize raw execution events into safer framework-owned types.
@@ -11,16 +11,18 @@ The V1 focus is replay-first development:
 - Run deterministic strategy tests against fixtures and snapshots.
 - Graduate the same event pipeline to live Linux event-ring ingestion in observe-only mode.
 
-V1 is not a production trading stack. Transaction submission, counterfactual simulation, private relays, risk engines, and full protocol state stores are intentionally delayed to V2.
+v0.1 is not a production trading stack. Transaction submission, counterfactual
+simulation, private relays, risk engines, and full protocol state stores are
+intentionally delayed to later product milestones.
 
 ## Project Plan
 
-V1 development follows:
+Planning documents:
 
-- [V1 spec](v1-spec.md)
-- [V1 implementation plan](v1-implementation-plan.md)
-- [V2 spec](v2-spec.md)
-- [V2 implementation plan](v2-implementation-plan.md)
+- [v0.1 spec](v1-spec.md)
+- [v0.1 implementation plan](v1-implementation-plan.md)
+- [Product spec](v2-spec.md)
+- [Product implementation plan](v2-implementation-plan.md)
 
 ## Quickstart
 
@@ -150,7 +152,7 @@ fn main() -> Result<()> {
 }
 ```
 
-V1 executors record or validate actions only. They do not sign or submit
+Current executors record or validate actions only. They do not sign or submit
 transactions.
 
 ## Development Process
