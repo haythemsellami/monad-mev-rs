@@ -20,6 +20,7 @@ V1 development follows:
 - [V1 spec](v1-spec.md)
 - [V1 implementation plan](v1-implementation-plan.md)
 - [V2 spec](v2-spec.md)
+- [V2 implementation plan](v2-implementation-plan.md)
 
 ## Quickstart
 
