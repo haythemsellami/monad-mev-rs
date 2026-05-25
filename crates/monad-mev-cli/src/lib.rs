@@ -159,8 +159,10 @@ struct GlobalOptions {
 
 fn parse_global_options(
     args: &[String],
-) -> std::result::Result<(GlobalOptions, &[String]), CliError> {
+) -> std::result::Result<(GlobalOptions, Vec<String>), CliError> {
     let mut options = GlobalOptions::default();
+    let mut command_args = Vec::new();
+    let mut seen_command = false;
     let mut index = 0;
 
     while let Some(arg) = args.get(index) {
@@ -181,15 +183,18 @@ fn parse_global_options(
                 }
                 options.log_level = Some(level.to_owned());
             }
-            value if value.starts_with('-') => {
+            value if value.starts_with('-') && !seen_command => {
                 return Err(CliError::Usage(format!("unknown global option `{value}`")));
             }
-            _ => break,
+            _ => {
+                seen_command = true;
+                command_args.push(arg.clone());
+            }
         }
         index += 1;
     }
 
-    Ok((options, &args[index..]))
+    Ok((options, command_args))
 }
 
 fn command_doctor(
@@ -1023,6 +1028,25 @@ mod tests {
         let value: Value = serde_json::from_str(&outcome.stdout).expect("lifecycle JSON");
         assert_eq!(value["command"], "lifecycle");
         assert_eq!(value["report"]["opportunities"], 1);
+    }
+
+    #[test]
+    fn json_global_option_is_accepted_after_command() {
+        let outcome = run_cli(["lifecycle", "--json"]);
+
+        assert_eq!(outcome.exit_code, OK);
+        let value: Value = serde_json::from_str(&outcome.stdout).expect("lifecycle JSON");
+        assert_eq!(value["command"], "lifecycle");
+    }
+
+    #[test]
+    fn json_global_option_is_accepted_after_command_options() {
+        let outcome = run_cli(["inspect", "--fixture", "raw-events", "--json"]);
+
+        assert_eq!(outcome.exit_code, OK);
+        let value: Value = serde_json::from_str(&outcome.stdout).expect("inspect JSON");
+        assert_eq!(value["command"], "inspect");
+        assert_eq!(value["event_count"], 2);
     }
 
     #[test]
