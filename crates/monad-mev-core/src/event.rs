@@ -185,7 +185,7 @@ impl Display for EventSourceKind {
 }
 
 /// Framework event kind.
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum EventKind {
     /// No-op or empty event type.

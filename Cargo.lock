@@ -300,6 +300,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "monad-mev-engine"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-events",
+ "monad-mev-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "monad-mev-events"
 version = "0.0.0"
 dependencies = [
@@ -307,6 +318,48 @@ dependencies = [
  "serde",
  "serde_json",
  "zstd",
+]
+
+[[package]]
+name = "monad-mev-exec"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-risk",
+ "monad-mev-sim",
+ "monad-mev-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "monad-mev-risk"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-sim",
+ "monad-mev-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "monad-mev-sim"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "monad-mev-store",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "monad-mev-store"
+version = "0.0.0"
+dependencies = [
+ "monad-mev-core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

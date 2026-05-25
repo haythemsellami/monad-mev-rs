@@ -2,7 +2,12 @@
 members = [
     "crates/monad-mev-cli",
     "crates/monad-mev-core",
+    "crates/monad-mev-engine",
     "crates/monad-mev-events",
+    "crates/monad-mev-exec",
+    "crates/monad-mev-risk",
+    "crates/monad-mev-sim",
+    "crates/monad-mev-store",
     "examples/dex-swap-monitor",
     "examples/erc20-transfer-monitor",
     "examples/live-observe",
