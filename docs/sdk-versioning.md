@@ -2,11 +2,11 @@
 
 Status date: 2026-05-22
 
-This document records the Monad Execution Events Rust SDK source pinned by `monad-mev-rs` V1.
+This document records the Monad Execution Events Rust SDK source pinned by `monad-mev-rs` v0.1.
 
 ## Pinned SDK
 
-V1 pins the SDK to:
+v0.1 pins the SDK to:
 
 ```text
 repository: https://github.com/category-labs/monad
@@ -23,7 +23,7 @@ rust/crates/monad-exec-events
 
 The local SDK pin metadata is intentionally isolated to `crates/monad-mev-events`.
 
-## Why V1.1
+## Why SDK v1.1
 
 The Monad Execution Events release notes say v1.1 moved the Rust SDK from the consensus repository to the execution repository.
 
@@ -39,7 +39,7 @@ git = "https://github.com/category-labs/monad-bft"
 tag = "release/exec-events-sdk-v1.0"
 ```
 
-Those snippets are useful historical context, but V1 should use the newer v1.1 execution-repo tag.
+Those snippets are useful historical context, but v0.1 should use the newer v1.1 execution-repo tag.
 
 References:
 
@@ -76,7 +76,7 @@ default = []
 sdk = ["dep:monad-event-ring", "dep:monad-exec-events"]
 ```
 
-No other V1 crate should depend directly on `monad-event-ring` or `monad-exec-events`.
+No other v0.1 crate should depend directly on `monad-event-ring` or `monad-exec-events`.
 
 When these dependencies are activated, they must be activated only in `crates/monad-mev-events`.
 
@@ -93,7 +93,7 @@ monad_mev_events::exec_event_schema_hash_hex()
 
 These APIs should be available only when the `sdk` feature is enabled and the upstream dependencies are active.
 
-V1 ingestion code must compare the compiled SDK schema hash against the schema hash recorded in a live event ring or snapshot before decoding payloads. A mismatch must be treated as a compatibility error by default.
+v0.1 ingestion code must compare the compiled SDK schema hash against the schema hash recorded in a live event ring or snapshot before decoding payloads. A mismatch must be treated as a compatibility error by default.
 
 ## Platform Dependencies
 
@@ -134,4 +134,4 @@ The root `NOTICE` file records the pinned upstream SDK source.
 
 The first SDK-backed Cargo build can be slow because Cargo fetches the execution repository and its submodules. During WP-02, `cargo test -p monad-mev-events sdk` began fetching upstream submodules and was stopped after several minutes without reaching compilation.
 
-Default V1 checks avoid this by not activating the upstream git dependencies yet. SDK-backed checks should still be run before implementing or releasing ingestion code.
+Default v0.1 checks avoid this by not activating the upstream git dependencies yet. SDK-backed checks should still be run before implementing or releasing ingestion code.

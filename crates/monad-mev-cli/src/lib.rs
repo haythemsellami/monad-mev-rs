@@ -57,7 +57,7 @@ impl CliOutcome {
     }
 }
 
-/// Returns the V1 help text.
+/// Returns the v0.1 help text.
 #[must_use]
 pub const fn help_text() -> &'static str {
     "monad-mev 0.0.0\n\nUsage: monad-mev [GLOBAL] <command> [OPTIONS]\n       monad-mev --help\n       monad-mev --version\n\nGlobal options:\n  --json                 Emit structured JSON when the command supports it\n  --no-color             Disable colored output\n  --log-level <level>    Set diagnostic verbosity\n\nCommands:\n  doctor                 Print environment and SDK diagnostics\n  inspect                Summarize a fixture or snapshot-like source\n  decode                 Decode fixture events to JSONL\n  replay                 Replay fixture events with deterministic filters\n  strategy new <path>    Create a compiling strategy scaffold\n"
@@ -196,7 +196,7 @@ fn command_doctor(
     let live_reason = if live_supported {
         "live event-ring support is enabled for Linux hosts"
     } else {
-        "live event-ring support requires a Linux host in V1"
+        "live event-ring support requires a Linux host in v0.1"
     };
     let sdk = sdk_metadata();
     let value = json!({
@@ -298,7 +298,7 @@ fn command_inspect_live(
     let reason = if live_supported {
         "live event-ring observation is available on this host"
     } else {
-        "live event-ring observation requires Linux in V1"
+        "live event-ring observation requires Linux in v0.1"
     };
     let path = if ring.contains('/') {
         PathBuf::from(&ring)

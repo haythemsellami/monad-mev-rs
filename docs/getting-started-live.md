@@ -1,6 +1,6 @@
 # Getting Started: Live Observe Mode
 
-V1 live mode is observe-only. It is intended to validate event-ring attachment,
+v0.1 live mode is observe-only. It is intended to validate event-ring attachment,
 metadata checks, gap handling, and replay pipeline readiness. It does not submit
 transactions.
 
@@ -29,9 +29,9 @@ MONAD_MEV_EVENT_RING=monad-exec-events cargo test -p monad-mev-events --test liv
 
 Set `MONAD_MEV_EVENT_RING_DIR` if the named ring is not under `/dev/shm`.
 
-## Current V1 Boundary
+## Current v0.1 Boundary
 
 `LiveEventRingSource` validates source metadata and exposes the observe-only
-polling boundary. SDK-backed descriptor polling remains behind the V1 live
+polling boundary. SDK-backed descriptor polling remains behind the v0.1 live
 feature until the Linux event-ring reader is wired to the pinned SDK dependency
 strategy.

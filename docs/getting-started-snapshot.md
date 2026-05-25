@@ -1,6 +1,6 @@
 # Getting Started: Snapshot And Fixture Replay
 
-The V1 development loop is replay-first. You can build and test strategies on
+The v0.1 development loop is replay-first. You can build and test strategies on
 macOS or Linux with deterministic fixtures before touching a live event ring.
 
 ## Inspect Fixtures

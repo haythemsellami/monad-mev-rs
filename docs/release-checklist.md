@@ -1,6 +1,6 @@
 # Release Checklist
 
-Before tagging a V1 release:
+Before tagging a v0.1 release:
 
 - Run `cargo fmt --all -- --check`.
 - Run `cargo clippy --all-targets --all-features -- -D warnings`.
@@ -10,6 +10,6 @@ Before tagging a V1 release:
 - Confirm ignored snapshot and live tests are documented.
 - Confirm `docs/sdk-versioning.md` still matches the pinned SDK metadata.
 - Confirm live docs state Linux-only support.
-- Confirm V1 docs do not claim production transaction submission.
+- Confirm v0.1 docs do not claim production transaction submission.
 - Update `CHANGELOG.md`.
 - Tag the release from a clean `main`.

@@ -1,6 +1,6 @@
 # Documentation
 
-This directory holds V1 user and developer documentation.
+This directory holds v0.1 user and developer documentation.
 
 Core documents:
 
@@ -13,7 +13,7 @@ Core documents:
 - `sdk-versioning.md`
 - `live-linux-runbook.md`
 - `ignored-tests.md`
-- `v1-hardening-review.md`
+- `v0.1-hardening-review.md`
 - `release-checklist.md`
 
 Start with the snapshot tutorial for local development. Use the live guide only

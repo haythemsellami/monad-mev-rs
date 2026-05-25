@@ -146,7 +146,7 @@ pub struct UnknownLog {
     pub log: LogEvent,
 }
 
-/// Decodes a log using the built-in V1 `DeFi` decoder set.
+/// Decodes a log using the built-in v0.1 `DeFi` decoder set.
 #[must_use]
 pub fn decode_basic_defi_log(log: LogEvent) -> DeFiEvent {
     if log.malformed {

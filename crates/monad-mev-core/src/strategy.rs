@@ -61,7 +61,7 @@ pub trait Strategy<E> {
     }
 }
 
-/// Framework action emitted by a V1 strategy.
+/// Framework action emitted by a v0.1 strategy.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum Action {
@@ -69,7 +69,7 @@ pub enum Action {
     Record(RecordAction),
     /// Emit an alert.
     Alert(AlertAction),
-    /// Dry-run transaction candidate. V1 never submits it.
+    /// Dry-run transaction candidate. v0.1 never submits it.
     SubmitTxDryRun(SubmitTxDryRun),
 }
 
@@ -91,7 +91,7 @@ pub struct AlertAction {
     pub message: String,
 }
 
-/// Dry-run transaction action. This is never submitted by V1 executors.
+/// Dry-run transaction action. This is never submitted by v0.1 executors.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct SubmitTxDryRun {
     /// Optional recipient. `None` represents contract creation.

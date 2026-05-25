@@ -70,7 +70,6 @@ capture events for protocol X
 -> execute or record the outcome
 ```
 
-The goal is not to make every developer an expert in raw event-ring descriptors.
 The goal is to let developers build searcher, monitoring, and keeper logic on
 top of the semantics Monad exposes through Execution Events.
 
@@ -336,5 +335,5 @@ Execution Events-first MEV framework for Monad.
 - Execution Events overview: https://docs.monad.xyz/execution-events/overview
 - Snapshot replay guide: https://docs.monad.xyz/execution-events/getting-started/snapshot
 - Rust API: https://docs.monad.xyz/execution-events/rust-api
-- `monad-mev-rs` product spec: `v2-spec.md`
-- `monad-mev-rs` implementation plan: `v2-implementation-plan.md`
+- `monad-mev-rs` product spec: `v0.2-spec.md`
+- `monad-mev-rs` implementation plan: `v0.2-implementation-plan.md`

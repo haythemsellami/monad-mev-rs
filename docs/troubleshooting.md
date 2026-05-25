@@ -17,7 +17,7 @@ cargo run -p monad-mev-cli -- inspect --fixture raw-events
 ## Schema Mismatch
 
 Schema mismatch means the source event schema does not match the compiled SDK
-schema. V1 defaults to strict validation for replay-style sources and warning
+schema. v0.1 defaults to strict validation for replay-style sources and warning
 behavior for observe-only live metadata.
 
 ## SDK Fetch Is Slow

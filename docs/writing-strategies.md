@@ -1,7 +1,7 @@
 # Writing Strategies
 
 Strategies implement `monad_mev_core::Strategy<T>` and return framework
-actions. V1 executors are recording and dry-run only.
+actions. v0.1 executors are recording and dry-run only.
 
 ```rust
 use monad_mev_core::{Action, EventEnvelope, RecordAction, Result, Strategy, StrategyContext};
@@ -31,5 +31,5 @@ cargo test --manifest-path /tmp/monad-mev-strategy/Cargo.toml
 ```
 
 Use `RecordingExecutor` for deterministic tests and `DryRunExecutor` for
-transaction-shape validation. V1 intentionally has no production submission
+transaction-shape validation. v0.1 intentionally has no production submission
 executor.

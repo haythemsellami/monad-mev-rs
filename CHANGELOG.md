@@ -9,4 +9,4 @@
 - Added fixture-backed CLI commands: `doctor`, `inspect`, `decode`, `replay`,
   and `strategy new`.
 - Added observe-only live event-ring scaffolding behind the `live` feature.
-- Added examples, docs, CI workflow, and release checklist for V1.
+- Added examples, docs, CI workflow, and release checklist for v0.1.

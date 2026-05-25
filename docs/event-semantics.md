@@ -1,6 +1,6 @@
 # Event Semantics
 
-V1 separates events into three layers.
+v0.1 separates events into three layers.
 
 ## Raw Execution Events
 
@@ -20,7 +20,7 @@ The pinned event IDs come from Monad Execution Events SDK v1.1.
 - `CallFrame`, `AccountAccess`, `StorageAccess`, and `TxnOutput` for lower
   level execution records.
 - `CommitState` for proposed, voted, finalized, and verified block state.
-- `UnknownRaw` when V1 does not yet define a higher-level shape.
+- `UnknownRaw` when v0.1 does not yet define a higher-level shape.
 
 Every event is wrapped in `EventEnvelope<T>` with stable metadata: `seqno`,
 `event_kind`, `source`, optional block and transaction refs, flow tags, commit

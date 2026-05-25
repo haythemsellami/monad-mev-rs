@@ -1,6 +1,6 @@
 //! Integration boundary for Monad Execution Events SDK crates.
 //!
-//! This crate owns the V1 boundary where upstream `monad-event-ring` and
+//! This crate owns the v0.1 boundary where upstream `monad-event-ring` and
 //! `monad-exec-events` dependencies will be activated.
 
 mod abi;

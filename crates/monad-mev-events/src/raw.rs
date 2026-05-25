@@ -300,7 +300,7 @@ pub struct RawTxnHeaderStart {
     pub payload: Vec<u8>,
 }
 
-/// Known event whose payload is intentionally still opaque in V1 raw mode.
+/// Known event whose payload is intentionally still opaque in v0.1 raw mode.
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct RawKnownEvent {
     /// Descriptor metadata.

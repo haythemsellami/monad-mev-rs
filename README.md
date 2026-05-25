@@ -19,10 +19,10 @@ intentionally delayed to later product milestones.
 
 Planning documents:
 
-- [v0.1 spec](v1-spec.md)
-- [v0.1 implementation plan](v1-implementation-plan.md)
-- [Product spec](v2-spec.md)
-- [Product implementation plan](v2-implementation-plan.md)
+- [v0.1 spec](v0.1-spec.md)
+- [v0.1 implementation plan](v0.1-implementation-plan.md)
+- [Product spec](v0.2-spec.md)
+- [Product implementation plan](v0.2-implementation-plan.md)
 
 ## Quickstart
 

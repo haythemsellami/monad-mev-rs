@@ -146,7 +146,7 @@ impl LiveEventRingSource {
     pub fn open(config: LiveConfig) -> Result<Self> {
         if !cfg!(target_os = "linux") {
             return Err(Error::Message(
-                "live event ring observation requires Linux in V1".to_owned(),
+                "live event ring observation requires Linux in v0.1".to_owned(),
             ));
         }
 
@@ -178,7 +178,7 @@ impl LiveEventRingSource {
 
     /// Polls one descriptor from the live source.
     ///
-    /// V1 keeps this observe-only until the Linux SDK-backed reader is active.
+    /// v0.1 keeps this observe-only until the Linux SDK-backed reader is active.
     ///
     /// # Errors
     ///
@@ -308,7 +308,7 @@ pub const fn live_availability_reason() -> &'static str {
     if host_supports_live_event_ring() {
         "live event-ring observation is available on this host"
     } else {
-        "live event-ring observation requires Linux in V1"
+        "live event-ring observation requires Linux in v0.1"
     }
 }
 

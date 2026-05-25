@@ -1,6 +1,6 @@
 # Live Linux Runbook
 
-V1 live mode is observe-only. It never submits transactions and it reports
+v0.1 live mode is observe-only. It never submits transactions and it reports
 availability before trying to attach to a Monad execution event ring.
 
 ## Prerequisites
