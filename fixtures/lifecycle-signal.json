@@ -1,0 +1,20 @@
+{
+  "name": "lifecycle-signal",
+  "description": "Generic v0.2 lifecycle signal fixture.",
+  "events": [
+    {
+      "seqno": 1,
+      "kind": "txn_log",
+      "address": "0x1111111111111111111111111111111111111111",
+      "data": "0xc8",
+      "state": "finalized"
+    }
+  ],
+  "expected_report": {
+    "events_seen": 1,
+    "events_decoded": 1,
+    "gaps": 0,
+    "payload_expired": 0,
+    "logs_seen": 1
+  }
+}

@@ -5,6 +5,7 @@ use std::fmt::Write as _;
 use std::path::{Path, PathBuf};
 
 use monad_mev_core::{Address, Error, EventKind, ReplayClock, B256};
+use monad_mev_engine::{CaptureFilter, Engine, FixtureDomainAdapter, MetricsSnapshot};
 use monad_mev_events::{
     decode_basic_defi_log, fixture_root, fixture_stream_items, load_fixture,
     load_workspace_fixture, sdk_metadata, ChainEvent, FixtureDocument, FixtureReport, ReplayConfig,
@@ -57,10 +58,10 @@ impl CliOutcome {
     }
 }
 
-/// Returns the v0.1 help text.
+/// Returns the help text.
 #[must_use]
 pub const fn help_text() -> &'static str {
-    "monad-mev 0.0.0\n\nUsage: monad-mev [GLOBAL] <command> [OPTIONS]\n       monad-mev --help\n       monad-mev --version\n\nGlobal options:\n  --json                 Emit structured JSON when the command supports it\n  --no-color             Disable colored output\n  --log-level <level>    Set diagnostic verbosity\n\nCommands:\n  doctor                 Print environment and SDK diagnostics\n  inspect                Summarize a fixture or snapshot-like source\n  decode                 Decode fixture events to JSONL\n  replay                 Replay fixture events with deterministic filters\n  strategy new <path>    Create a compiling strategy scaffold\n"
+    "monad-mev 0.0.0\n\nUsage: monad-mev [GLOBAL] <command> [OPTIONS]\n       monad-mev --help\n       monad-mev --version\n\nGlobal options:\n  --json                 Emit structured JSON when the command supports it\n  --no-color             Disable colored output\n  --log-level <level>    Set diagnostic verbosity\n\nCommands:\n  doctor                 Print environment and SDK diagnostics\n  inspect                Summarize a fixture or snapshot-like source\n  decode                 Decode fixture events to JSONL\n  replay                 Replay fixture events with deterministic filters\n  lifecycle              Run the generic v0.2 lifecycle harness\n  strategy new <path>    Create a compiling strategy scaffold\n"
 }
 
 /// Returns the version text.
@@ -116,6 +117,7 @@ fn run_cli_inner(args: &[String]) -> std::result::Result<CliOutcome, CliError> {
         "inspect" => command_inspect(&global, command_args),
         "decode" => command_decode(&global, command_args),
         "replay" => command_replay(&global, command_args),
+        "lifecycle" => command_lifecycle(&global, command_args),
         "strategy" => command_strategy(command_args),
         "-h" | "--help" => Ok(CliOutcome::ok(help_text())),
         "--version" => Ok(CliOutcome::ok(format!("{}\n", version_text()))),
@@ -136,6 +138,9 @@ fn command_help(command: &str) -> Option<CliOutcome> {
         }
         "replay" => {
             "Usage: monad-mev [GLOBAL] replay --fixture <name-or-path> [FILTERS] [--report <path>] [--events-jsonl <path>]\n\nRun deterministic fixture replay with optional filters.\n"
+        }
+        "lifecycle" => {
+            "Usage: monad-mev [GLOBAL] lifecycle [--fixture <name-or-path>]\n\nRun the generic v0.2 capture -> state -> opportunity lifecycle harness.\n"
         }
         "strategy" => {
             "Usage: monad-mev strategy new <destination>\n\nCreate a compiling strategy scaffold with a fixture-backed test.\n"
@@ -418,6 +423,47 @@ fn command_replay(
     Ok(CliOutcome::ok(format!("{}\n", run.human_summary())))
 }
 
+fn command_lifecycle(
+    global: &GlobalOptions,
+    args: &[String],
+) -> std::result::Result<CliOutcome, CliError> {
+    let options = LifecycleOptions::parse(args)?;
+    let source = load_fixture_input(Some(
+        options.fixture.as_deref().unwrap_or("lifecycle-signal"),
+    ))?;
+    let items = fixture_stream_items(&source.fixture).map_err(CliError::from)?;
+    let watched_address = first_log_address(&items).ok_or_else(|| {
+        CliError::Runtime("lifecycle fixture must contain at least one log address".to_owned())
+    })?;
+    let adapter = FixtureDomainAdapter::new(watched_address);
+    let mut engine = Engine::new()
+        .with_capture(CaptureFilter::named("lifecycle").with_address(watched_address))
+        .with_event_adapter(Box::new(adapter.clone()))
+        .with_state_adapter(Box::new(adapter.clone()))
+        .with_detector(Box::new(adapter));
+    let run = engine.run(items).map_err(CliError::from)?;
+    let metrics = MetricsSnapshot::from_report(&run.report);
+
+    if global.json {
+        return json_outcome(&json!({
+            "command": "lifecycle",
+            "source": source.label,
+            "report": run.report,
+            "metrics": metrics,
+            "opportunities": run.opportunities,
+        }));
+    }
+
+    Ok(CliOutcome::ok(format!(
+        "source: {}\nevents_seen: {}\nevents_captured: {}\nstate_updates: {}\nopportunities: {}\n",
+        source.label,
+        run.report.events_seen,
+        run.report.events_captured,
+        run.report.state_updates,
+        run.report.opportunities,
+    )))
+}
+
 fn command_strategy(args: &[String]) -> std::result::Result<CliOutcome, CliError> {
     match args {
         [subcommand, destination] if subcommand == "new" => {
@@ -548,6 +594,44 @@ struct ReplayOptions {
     clock: ReplayClock,
     report: Option<PathBuf>,
     events_jsonl: Option<PathBuf>,
+}
+
+#[derive(Clone, Debug, Default, Eq, PartialEq)]
+struct LifecycleOptions {
+    fixture: Option<String>,
+}
+
+impl LifecycleOptions {
+    fn parse(args: &[String]) -> std::result::Result<Self, CliError> {
+        let mut options = Self::default();
+        let mut index = 0;
+
+        while let Some(arg) = args.get(index) {
+            match arg.as_str() {
+                "--fixture" => {
+                    index += 1;
+                    options.fixture = Some(required_arg(args, index, "--fixture")?.to_owned());
+                }
+                value if value.starts_with("--fixture=") => {
+                    options.fixture = Some(value.trim_start_matches("--fixture=").to_owned());
+                }
+                value if value.starts_with('-') => {
+                    return Err(CliError::Usage(format!(
+                        "unknown lifecycle option `{value}`"
+                    )));
+                }
+                value if options.fixture.is_none() => options.fixture = Some(value.to_owned()),
+                value => {
+                    return Err(CliError::Usage(format!(
+                        "`lifecycle` received unexpected argument `{value}`"
+                    )));
+                }
+            }
+            index += 1;
+        }
+
+        Ok(options)
+    }
 }
 
 impl ReplayOptions {
@@ -685,6 +769,18 @@ fn fixture_kind_counts(fixture: &FixtureDocument) -> BTreeMap<String, u64> {
         }
     }
     counts
+}
+
+fn first_log_address(items: &[monad_mev_core::StreamItem<ChainEvent>]) -> Option<Address> {
+    items.iter().find_map(|item| {
+        let monad_mev_core::StreamItem::Event(event) = item else {
+            return None;
+        };
+        let ChainEvent::Log(log) = &event.payload else {
+            return None;
+        };
+        log.address
+    })
 }
 
 fn json_outcome(value: &impl Serialize) -> std::result::Result<CliOutcome, CliError> {
@@ -920,8 +1016,25 @@ mod tests {
     }
 
     #[test]
+    fn lifecycle_harness_outputs_opportunity() {
+        let outcome = run_cli(["--json", "lifecycle"]);
+
+        assert_eq!(outcome.exit_code, OK);
+        let value: Value = serde_json::from_str(&outcome.stdout).expect("lifecycle JSON");
+        assert_eq!(value["command"], "lifecycle");
+        assert_eq!(value["report"]["opportunities"], 1);
+    }
+
+    #[test]
     fn every_command_has_help() {
-        for command in ["doctor", "inspect", "decode", "replay", "strategy"] {
+        for command in [
+            "doctor",
+            "inspect",
+            "decode",
+            "replay",
+            "lifecycle",
+            "strategy",
+        ] {
             let outcome = run_cli([command, "--help"]);
 
             assert_eq!(outcome.exit_code, OK, "{command} help should succeed");

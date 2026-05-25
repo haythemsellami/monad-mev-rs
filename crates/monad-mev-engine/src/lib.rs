@@ -412,6 +412,67 @@ pub struct EngineReport {
     pub rejections: u64,
 }
 
+/// Deterministic metrics snapshot.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct MetricsSnapshot {
+    /// Counter values by metric name.
+    pub counters: BTreeMap<String, u64>,
+}
+
+impl MetricsSnapshot {
+    /// Creates metrics from an engine report.
+    #[must_use]
+    pub fn from_report(report: &EngineReport) -> Self {
+        Self {
+            counters: BTreeMap::from([
+                ("events_seen".to_owned(), report.events_seen),
+                ("events_captured".to_owned(), report.events_captured),
+                ("domain_events".to_owned(), report.domain_events),
+                ("state_updates".to_owned(), report.state_updates),
+                ("opportunities".to_owned(), report.opportunities),
+                ("rejections".to_owned(), report.rejections),
+            ]),
+        }
+    }
+
+    /// Returns a counter value.
+    #[must_use]
+    pub fn get(&self, name: &str) -> u64 {
+        self.counters.get(name).copied().unwrap_or_default()
+    }
+}
+
+/// Lightweight trace event for deterministic tests and local runs.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TraceEvent {
+    /// Stage name.
+    pub stage: String,
+    /// Stable message.
+    pub message: String,
+}
+
+/// In-memory trace sink.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TraceLog {
+    events: Vec<TraceEvent>,
+}
+
+impl TraceLog {
+    /// Records one trace event.
+    pub fn push(&mut self, stage: impl Into<String>, message: impl Into<String>) {
+        self.events.push(TraceEvent {
+            stage: stage.into(),
+            message: message.into(),
+        });
+    }
+
+    /// Returns trace events.
+    #[must_use]
+    pub fn events(&self) -> &[TraceEvent] {
+        &self.events
+    }
+}
+
 /// Output from a lifecycle run.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct EngineRun {
@@ -846,5 +907,33 @@ mod tests {
         monitor.record(run.opportunities);
 
         assert_eq!(monitor.actions().len(), 1);
+    }
+
+    #[test]
+    fn metrics_snapshot_exposes_engine_counters() {
+        let report = EngineReport {
+            events_seen: 1,
+            events_captured: 1,
+            domain_events: 1,
+            state_updates: 1,
+            opportunities: 1,
+            rejections: 0,
+        };
+
+        let metrics = MetricsSnapshot::from_report(&report);
+
+        assert_eq!(metrics.get("events_seen"), 1);
+        assert_eq!(metrics.get("missing"), 0);
+    }
+
+    #[test]
+    fn trace_log_keeps_stage_order() {
+        let mut log = TraceLog::default();
+
+        log.push("capture", "matched");
+        log.push("strategy", "recorded");
+
+        assert_eq!(log.events()[0].stage, "capture");
+        assert_eq!(log.events()[1].stage, "strategy");
     }
 }

@@ -1,12 +1,14 @@
 //! Commit-state-aware state storage for `monad-mev-rs`.
 
 use std::collections::BTreeMap;
+use std::fs;
+use std::path::PathBuf;
 
 use monad_mev_core::{CommitState, Error, EventEnvelope, EventKind, Result};
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// Stable key for framework or adapter state.
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 pub struct StateKey {
     /// Logical namespace, usually the adapter or package name.
     pub namespace: String,
@@ -22,6 +24,34 @@ impl StateKey {
             namespace: namespace.into(),
             id: id.into(),
         }
+    }
+
+    fn as_stable_string(&self) -> String {
+        format!("{}/{}", self.namespace, self.id)
+    }
+}
+
+impl Serialize for StateKey {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.as_stable_string())
+    }
+}
+
+impl<'de> Deserialize<'de> for StateKey {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let value = String::deserialize(deserializer)?;
+        let Some((namespace, id)) = value.split_once('/') else {
+            return Err(serde::de::Error::custom(
+                "state key must use `namespace/id` format",
+            ));
+        };
+        Ok(Self::new(namespace, id))
     }
 }
 
@@ -235,6 +265,114 @@ impl InMemoryStateStore {
     pub fn audit(&self) -> &[StateAuditRecord] {
         &self.audit
     }
+
+    /// Creates a portable snapshot.
+    #[must_use]
+    pub fn snapshot(&self) -> StateSnapshot {
+        StateSnapshot {
+            format_version: 1,
+            store: self.clone(),
+        }
+    }
+}
+
+/// Durable state snapshot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct StateSnapshot {
+    /// Snapshot format version.
+    pub format_version: u16,
+    /// Store contents.
+    pub store: InMemoryStateStore,
+}
+
+impl StateSnapshot {
+    /// Serializes the snapshot to deterministic JSON.
+    ///
+    /// # Errors
+    ///
+    /// Returns serialization failures.
+    pub fn to_json(&self) -> Result<String> {
+        serde_json::to_string_pretty(self)
+            .map_err(|err| Error::Message(format!("failed to serialize state snapshot: {err}")))
+    }
+
+    /// Parses a state snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Returns parse failures or unsupported format errors.
+    pub fn from_json(json: &str) -> Result<Self> {
+        let snapshot: Self = serde_json::from_str(json)
+            .map_err(|err| Error::Message(format!("failed to parse state snapshot: {err}")))?;
+        if snapshot.format_version != 1 {
+            return Err(Error::Message(format!(
+                "unsupported state snapshot version {}",
+                snapshot.format_version
+            )));
+        }
+        Ok(snapshot)
+    }
+}
+
+/// Persistent state backend.
+pub trait StateBackend {
+    /// Saves a snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Returns backend failures.
+    fn save(&self, snapshot: &StateSnapshot) -> Result<()>;
+
+    /// Loads a snapshot.
+    ///
+    /// # Errors
+    ///
+    /// Returns backend failures.
+    fn load(&self) -> Result<StateSnapshot>;
+}
+
+/// JSON file-backed state backend.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct JsonFileStateBackend {
+    /// Snapshot path.
+    pub path: PathBuf,
+}
+
+impl JsonFileStateBackend {
+    /// Creates a file backend.
+    #[must_use]
+    pub fn new(path: impl Into<PathBuf>) -> Self {
+        Self { path: path.into() }
+    }
+}
+
+impl StateBackend for JsonFileStateBackend {
+    fn save(&self, snapshot: &StateSnapshot) -> Result<()> {
+        if let Some(parent) = self.path.parent() {
+            fs::create_dir_all(parent).map_err(|err| {
+                Error::Message(format!(
+                    "failed to create state snapshot directory {}: {err}",
+                    parent.display()
+                ))
+            })?;
+        }
+        fs::write(&self.path, snapshot.to_json()?).map_err(|err| {
+            Error::Message(format!(
+                "failed to write state snapshot {}: {err}",
+                self.path.display()
+            ))
+        })
+    }
+
+    fn load(&self) -> Result<StateSnapshot> {
+        let json = fs::read_to_string(&self.path).map_err(|err| {
+            Error::Message(format!(
+                "failed to read state snapshot {}: {err}",
+                self.path.display()
+            ))
+        })?;
+        StateSnapshot::from_json(&json)
+    }
 }
 
 /// Projection from events into state updates.
@@ -378,5 +516,47 @@ mod tests {
         assert_eq!(entry.value, serde_json::json!(1));
         assert_eq!(entry.version.revision, 1);
         assert_eq!(store.audit().len(), 1);
+    }
+
+    #[test]
+    fn state_snapshot_round_trips_through_json() {
+        let mut store = InMemoryStateStore::default();
+        store.apply(
+            StateUpdate::from_event(
+                StateKey::new("snapshot", "k"),
+                serde_json::json!({ "value": 1 }),
+                &event(1, CommitState::Finalized, "a"),
+            )
+            .expect("update"),
+        );
+
+        let json = store.snapshot().to_json().expect("json");
+        let restored = StateSnapshot::from_json(&json).expect("snapshot");
+
+        assert_eq!(restored.store, store);
+    }
+
+    #[test]
+    fn json_file_backend_restores_state() {
+        let mut store = InMemoryStateStore::default();
+        store.apply(
+            StateUpdate::from_event(
+                StateKey::new("snapshot", "k"),
+                "value",
+                &event(1, CommitState::Finalized, "a"),
+            )
+            .expect("update"),
+        );
+        let path = std::env::temp_dir().join(format!(
+            "monad-mev-store-{}-snapshot.json",
+            std::process::id()
+        ));
+        let backend = JsonFileStateBackend::new(path.clone());
+
+        backend.save(&store.snapshot()).expect("save");
+        let restored = backend.load().expect("load");
+        let _ = fs::remove_file(path);
+
+        assert_eq!(restored.store, store);
     }
 }

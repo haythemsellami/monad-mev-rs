@@ -1,19 +1,21 @@
 # monad-mev-rs
 
-`monad-mev-rs` is an Execution Events-first Rust framework for building Monad
-searcher, monitoring, and MEV-style applications.
+`monad-mev-rs` is an Execution Events-first Rust framework for building,
+testing, replaying, simulating, and executing Monad searcher, monitoring, and
+MEV-style applications.
 
-The current v0.1 focus is replay-first development:
+The framework now includes the v0.1 replay foundation and v0.2 generic MEV
+runtime:
 
 - Inspect historical Monad Execution Events snapshots.
 - Normalize raw execution events into safer framework-owned types.
 - Decode common EVM and DeFi logs.
 - Run deterministic strategy tests against fixtures and snapshots.
 - Graduate the same event pipeline to live Linux event-ring ingestion in observe-only mode.
-
-v0.1 is not a production trading stack. Transaction submission, counterfactual
-simulation, private relays, risk engines, and full protocol state stores are
-intentionally delayed to later product milestones.
+- Capture protocol/application-specific subsets with generic filters.
+- Route events through adapters, state stores, and opportunity detectors.
+- Simulate transaction candidates with auditable state reads.
+- Gate execution through explicit risk policies and fake-tested executors.
 
 ## Project Plan
 
@@ -33,6 +35,7 @@ cargo run -p monad-mev-cli -- doctor
 cargo run -p monad-mev-cli -- inspect --fixture raw-events
 cargo run -p monad-mev-cli -- decode --fixture defi-decoded --defi
 cargo run -p monad-mev-cli -- replay --fixture raw-events
+cargo run -p monad-mev-cli -- lifecycle --json
 ```
 
 Create and test a strategy scaffold:
@@ -59,7 +62,12 @@ relative paths for your crate location:
 ```toml
 [dependencies]
 monad-mev-core = { path = "crates/monad-mev-core" }
+monad-mev-engine = { path = "crates/monad-mev-engine" }
 monad-mev-events = { path = "crates/monad-mev-events" }
+monad-mev-store = { path = "crates/monad-mev-store" }
+monad-mev-sim = { path = "crates/monad-mev-sim" }
+monad-mev-risk = { path = "crates/monad-mev-risk" }
+monad-mev-exec = { path = "crates/monad-mev-exec" }
 serde_json = "1.0"
 ```
 

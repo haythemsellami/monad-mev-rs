@@ -22,6 +22,7 @@ monad-mev inspect --fixture raw-events
 monad-mev inspect monad-exec-events --live --duration 10s --summary
 monad-mev decode --fixture defi-decoded --defi
 monad-mev replay --fixture raw-events --report /tmp/report.json --events-jsonl /tmp/events.jsonl
+monad-mev lifecycle --json
 monad-mev strategy new /tmp/monad-mev-strategy
 ```
 
@@ -31,4 +32,5 @@ errors:
 ```bash
 monad-mev --json doctor
 monad-mev --json replay --fixture raw-events
+monad-mev --json lifecycle
 ```

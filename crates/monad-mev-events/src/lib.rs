@@ -16,6 +16,7 @@ mod raw;
 mod replay;
 mod snapshot;
 mod source;
+mod stream;
 
 pub use abi::{
     AbiDecoder, AbiEventDefinition, AbiEventInput, AbiValue, DecodedAbiEvent, DecodedAbiField,
@@ -64,6 +65,10 @@ pub use snapshot::{
 pub use source::{
     map_sdk_error, schema_mismatch_stream_item, validate_readable_path, ContentTypeValidation,
     ExecEventSource, SchemaPolicy, SchemaValidation, SourceInfo, EXPECTED_EXEC_CONTENT_TYPE,
+};
+pub use stream::{
+    collect_execution_stream, compare_stream_parity, execution_stream_report, ExecutionEventStream,
+    StreamParityComparison, StreamParityReport, VecExecutionEventStream,
 };
 
 /// Git repository that provides the pinned Monad Execution Events Rust SDK.

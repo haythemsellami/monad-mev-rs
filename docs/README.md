@@ -1,6 +1,6 @@
 # Documentation
 
-This directory holds v0.1 user and developer documentation.
+This directory holds user and developer documentation.
 
 Core documents:
 
@@ -15,6 +15,7 @@ Core documents:
 - `ignored-tests.md`
 - `v0.1-hardening-review.md`
 - `release-checklist.md`
+- `v0.2/`
 
 Start with the snapshot tutorial for local development. Use the live guide only
 on Linux hosts that can access a Monad execution event ring.

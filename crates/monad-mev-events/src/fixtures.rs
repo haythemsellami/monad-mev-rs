@@ -245,11 +245,12 @@ fn fixture_log(event: &Value) -> Result<Vec<u8>> {
         );
     }
 
-    fixture_log_payload(
-        default_address(),
-        &[event_topic(ERC20_TRANSFER_SIGNATURE)],
-        &[],
-    )
+    let address = optional_address(event, "address")?.unwrap_or_else(default_address);
+    let data = optional_str(event, "data")?
+        .map(parse_hex_bytes)
+        .transpose()?
+        .unwrap_or_default();
+    fixture_log_payload(address, &[event_topic("FixtureSignal(uint8)")], &data)
 }
 
 fn fixture_commit_state(event: &Value, event_type: ExecEventType) -> Result<CommitState> {
@@ -400,6 +401,7 @@ mod tests {
             "malformed-logs.json",
             "gap.json",
             "commit-states.json",
+            "lifecycle-signal.json",
         ] {
             let fixture = load_workspace_fixture(name).expect("fixture should load");
             assert!(!fixture.name.is_empty());

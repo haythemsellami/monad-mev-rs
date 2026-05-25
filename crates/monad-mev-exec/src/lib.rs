@@ -207,6 +207,24 @@ pub trait BundleTransport {
     fn submit_bundle(&mut self, bundle: &BundleRequest) -> Result<BundleReceipt>;
 }
 
+/// Deterministic fake bundle transport.
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct FakeBundleTransport {
+    /// Submitted bundle IDs.
+    pub submitted: Vec<String>,
+}
+
+impl BundleTransport for FakeBundleTransport {
+    fn submit_bundle(&mut self, bundle: &BundleRequest) -> Result<BundleReceipt> {
+        self.submitted.push(bundle.id.clone());
+        Ok(BundleReceipt {
+            id: bundle.id.clone(),
+            hash: deterministic_hash(&bundle.id),
+            status: format!("submitted:{}plans", bundle.plans.len()),
+        })
+    }
+}
+
 fn deterministic_hash(input: &str) -> B256 {
     let mut bytes = [0_u8; 32];
     for (index, byte) in input.as_bytes().iter().enumerate() {
@@ -336,5 +354,20 @@ mod tests {
 
         assert!(executor.execute(&plan(false)).is_err());
         assert!(executor.transport.submitted.is_empty());
+    }
+
+    #[test]
+    fn fake_bundle_transport_records_submission() {
+        let execution_plan = plan(true);
+        let bundle = BundleRequest {
+            id: "bundle-1".to_owned(),
+            plans: vec![execution_plan],
+        };
+        let mut transport = FakeBundleTransport::default();
+
+        let receipt = transport.submit_bundle(&bundle).expect("bundle");
+
+        assert_eq!(receipt.status, "submitted:1plans");
+        assert_eq!(transport.submitted, vec!["bundle-1"]);
     }
 }

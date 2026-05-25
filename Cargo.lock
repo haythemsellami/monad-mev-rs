@@ -285,6 +285,7 @@ name = "monad-mev-cli"
 version = "0.0.0"
 dependencies = [
  "monad-mev-core",
+ "monad-mev-engine",
  "monad-mev-events",
  "serde",
  "serde_json",
