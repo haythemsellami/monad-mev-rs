@@ -7,7 +7,8 @@ availability before trying to attach to a Monad execution event ring.
 
 - Linux host with access to a Monad validator or execution-event ring.
 - Build dependencies required by the pinned official Monad SDK, including a C++
-  toolchain, CMake, Clang, and libclang.
+  toolchain, CMake, Clang, and libclang 19 or newer. The SDK headers use C23
+  `constexpr`, which older libclang releases cannot parse for bindgen.
 - `MONAD_MEV_EVENT_RING` set to a ring name such as `monad-exec-events`, or to
   an explicit path.
 - Optional `MONAD_MEV_EVENT_RING_DIR` when named rings are not under `/dev/shm`.

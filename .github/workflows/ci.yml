@@ -18,27 +18,45 @@ jobs:
   clippy:
     name: Clippy
     runs-on: ubuntu-latest
+    env:
+      LIBCLANG_PATH: /usr/lib/llvm-19/lib
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install Monad SDK bindgen toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libclang-19-dev
       - run: cargo clippy --all-targets --all-features -- -D warnings
 
   test:
     name: Tests
     runs-on: ubuntu-latest
+    env:
+      LIBCLANG_PATH: /usr/lib/llvm-19/lib
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Install Monad SDK bindgen toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libclang-19-dev
       - run: cargo test --workspace --all-features
       - run: cargo test --doc --workspace --all-features
 
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
+    env:
+      LIBCLANG_PATH: /usr/lib/llvm-19/lib
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: llvm-tools-preview
       - uses: taiki-e/install-action@cargo-llvm-cov
+      - name: Install Monad SDK bindgen toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes libclang-19-dev
       - run: cargo llvm-cov --workspace --all-features --lcov --output-path lcov.info
