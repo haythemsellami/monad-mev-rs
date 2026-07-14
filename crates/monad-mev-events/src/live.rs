@@ -221,11 +221,10 @@ impl LiveEventRingSource {
     pub fn poll_descriptor(&mut self) -> Result<Option<StreamItem<RawExecEvent>>> {
         #[cfg(all(feature = "sdk", target_os = "linux"))]
         {
-            return self
-                .reader
+            self.reader
                 .as_ref()
                 .ok_or_else(|| Error::Message("live SDK reader is not open".to_owned()))?
-                .try_next();
+                .try_next()
         }
 
         #[cfg(not(all(feature = "sdk", target_os = "linux")))]

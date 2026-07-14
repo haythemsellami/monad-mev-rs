@@ -1,5 +1,5 @@
 use std::{
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
         mpsc::{sync_channel, Receiver, SyncSender},
@@ -30,7 +30,7 @@ pub(crate) struct SdkLiveReader {
 }
 
 enum LiveMessage {
-    Item(StreamItem<RawExecEvent>),
+    Item(Box<StreamItem<RawExecEvent>>),
     Error(String),
 }
 
@@ -45,10 +45,10 @@ impl SdkLiveReader {
             .name("monad-mev-live-ring".to_owned())
             .spawn(move || {
                 run_reader(
-                    path,
+                    &path,
                     poll_interval_millis,
-                    sender,
-                    ready_sender,
+                    &sender,
+                    &ready_sender,
                     &thread_stop,
                 );
             })
@@ -66,7 +66,7 @@ impl SdkLiveReader {
 
     pub(crate) fn try_next(&self) -> Result<Option<StreamItem<RawExecEvent>>> {
         match self.receiver.try_recv() {
-            Ok(LiveMessage::Item(item)) => Ok(Some(item)),
+            Ok(LiveMessage::Item(item)) => Ok(Some(*item)),
             Ok(LiveMessage::Error(error)) => Err(Error::Message(error)),
             Err(std::sync::mpsc::TryRecvError::Empty) => Ok(None),
             Err(std::sync::mpsc::TryRecvError::Disconnected) => Err(Error::Message(
@@ -87,13 +87,13 @@ pub(crate) fn schema_hash() -> B256 {
 }
 
 fn run_reader(
-    path: PathBuf,
+    path: &Path,
     poll_interval_millis: u64,
-    sender: SyncSender<LiveMessage>,
-    ready_sender: SyncSender<std::result::Result<(), String>>,
+    sender: &SyncSender<LiveMessage>,
+    ready_sender: &SyncSender<std::result::Result<(), String>>,
     stop: &AtomicBool,
 ) {
-    let result = open_ring(&path);
+    let result = open_ring(path);
     let Ok(ring) = result else {
         let _ = ready_sender.send(result.map(|_| ()));
         return;
@@ -116,11 +116,11 @@ fn run_reader(
                 if let Some(expected) = expected_seqno {
                     if info.seqno != expected
                         && sender
-                            .send(LiveMessage::Item(StreamItem::Gap(GapEvent::new(
+                            .send(LiveMessage::Item(Box::new(StreamItem::Gap(GapEvent::new(
                                 expected,
                                 info.seqno,
                                 EventSourceKind::Live,
-                            ))))
+                            )))))
                             .is_err()
                     {
                         return;
@@ -137,7 +137,7 @@ fn run_reader(
                             event_kind: Some(EventKind::Unknown(event_type)),
                             source: EventSourceKind::Live,
                         });
-                        if sender.send(LiveMessage::Item(item)).is_err() {
+                        if sender.send(LiveMessage::Item(Box::new(item))).is_err() {
                             return;
                         }
                     }
@@ -159,7 +159,7 @@ fn run_reader(
                         );
                         envelope.payload.record_epoch_nanos = info.record_epoch_nanos;
                         let item = StreamItem::Event(raw_event_from_snapshot(envelope));
-                        if sender.send(LiveMessage::Item(item)).is_err() {
+                        if sender.send(LiveMessage::Item(Box::new(item))).is_err() {
                             return;
                         }
                     }
@@ -175,11 +175,13 @@ fn run_reader(
     }
 }
 
-fn open_ring(path: &PathBuf) -> std::result::Result<ExecEventRing, String> {
+fn open_ring(path: &Path) -> std::result::Result<ExecEventRing, String> {
     let path = EventRingPath::resolve(path)?;
     ExecEventRing::new(path)
 }
 
+// The SDK's raw-filter callback contract passes descriptor metadata by value.
+#[allow(clippy::needless_pass_by_value)]
 fn copy_descriptor(
     info: EventDescriptorInfo<ExecEventDecoder>,
     payload: &[u8],
