@@ -29,9 +29,18 @@ MONAD_MEV_EVENT_RING=monad-exec-events cargo test -p monad-mev-events --test liv
 
 Set `MONAD_MEV_EVENT_RING_DIR` if the named ring is not under `/dev/shm`.
 
-## Current v0.1 Boundary
+## Reader Semantics
 
-`LiveEventRingSource` validates source metadata and exposes the observe-only
-polling boundary. SDK-backed descriptor polling remains behind the v0.1 live
-feature until the Linux event-ring reader is wired to the pinned SDK dependency
-strategy.
+The `live` feature pins the official `monad-event-ring` and
+`monad-exec-events` crates to a reviewed Monad revision. On Linux,
+`LiveEventRingSource::open` starts a bounded SDK reader and
+`poll_descriptor` returns:
+
+- `Ok(Some(item))` for an owned event, sequence gap, or expired payload;
+- `Ok(None)` when the producer has not published another descriptor yet;
+- `Err(_)` when the SDK reader fails or disconnects.
+
+The SDK payload is copied before the ring can overwrite it. Sequence gaps and
+payload expiry stay explicit `StreamItem` variants so callers can apply their
+configured risk-off policy. The reader remains observe-only and never signs or
+submits transactions.
