@@ -13,15 +13,15 @@ use monad_event_ring::{
     DecodedEventRing, EventDecoder, EventDescriptorInfo, EventNextResult, EventPayloadResult,
     EventRingPath,
 };
-use monad_exec_events::{
-    ExecEventDecoder, ExecEventDescriptorExt, ExecEventReaderExt, ExecEventRing, ExecEventType,
-};
+use monad_exec_events::{ExecEventDecoder, ExecEventReaderExt, ExecEventRing, ExecEventType};
 use monad_mev_core::{
-    CommitState, Error, EventEnvelope, EventKind, EventMeta, EventSourceKind, FlowTags, GapEvent,
+    CommitState, Error, EventEnvelope, EventKind, EventMeta, EventSourceKind, GapEvent,
     PayloadExpired, Result, StreamItem, B256,
 };
 
-use crate::{raw_event_from_snapshot, RawExecEvent, SnapshotDescriptor};
+use crate::{
+    flow_tags_from_content_ext, raw_event_from_snapshot, RawExecEvent, SnapshotDescriptor,
+};
 
 #[derive(Debug)]
 pub(crate) struct SdkLiveReader {
@@ -128,8 +128,6 @@ fn run_reader(
                 }
                 expected_seqno = info.seqno.checked_add(1);
 
-                let block_number = descriptor.get_block_number();
-                let txn_idx = info.flow_info.txn_idx;
                 let seqno = info.seqno;
                 let event_type = info.event_type;
                 match descriptor.try_filter_map_raw(copy_descriptor) {
@@ -144,6 +142,7 @@ fn run_reader(
                         }
                     }
                     EventPayloadResult::Ready(Some(snapshot)) => {
+                        let flow = flow_tags_from_content_ext(snapshot.content_ext);
                         let mut envelope = EventEnvelope::new(
                             snapshot,
                             EventMeta {
@@ -151,17 +150,9 @@ fn run_reader(
                                 record_epoch_nanos: info.record_epoch_nanos,
                                 event_kind: EventKind::Unknown(event_type),
                                 source: EventSourceKind::Live,
-                                block: block_number,
-                                txn: txn_idx.and_then(|index| u32::try_from(index).ok()),
-                                flow: FlowTags {
-                                    block_seqno: info.flow_info.block_seqno,
-                                    txn_id: txn_idx
-                                        .and_then(|index| u64::try_from(index).ok())
-                                        .and_then(|index| index.checked_add(1))
-                                        .unwrap_or(0),
-                                    account_index: info.flow_info.account_idx,
-                                    reserved: 0,
-                                },
+                                block: None,
+                                txn: None,
+                                flow,
                                 commit_state: CommitState::Unknown,
                                 schema_hash: Some(schema_hash()),
                             },
