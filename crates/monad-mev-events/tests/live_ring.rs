@@ -13,7 +13,10 @@ fn opens_live_ring_from_env() {
         LiveConfig::named(ring)
     };
 
-    let source = LiveEventRingSource::open(config).expect("live event ring should open");
+    let mut source = LiveEventRingSource::open(config).expect("live event ring should open");
 
     assert_eq!(source.source_info().content_type.as_deref(), Some("exec"));
+    let _ = source
+        .poll_descriptor()
+        .expect("live SDK poll should not fail");
 }

@@ -14,6 +14,8 @@ mod live;
 mod normalize;
 mod raw;
 mod replay;
+#[cfg(all(feature = "sdk", target_os = "linux"))]
+mod sdk_live;
 mod snapshot;
 mod source;
 mod stream;

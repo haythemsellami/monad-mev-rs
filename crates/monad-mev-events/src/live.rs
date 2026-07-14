@@ -131,10 +131,12 @@ pub fn resolve_event_ring_path(config: &LiveConfig) -> Result<PathBuf> {
 }
 
 /// Metadata and observe-only operations for a live execution event ring.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct LiveEventRingSource {
     config: LiveConfig,
     info: SourceInfo,
+    #[cfg(all(feature = "sdk", target_os = "linux"))]
+    reader: Option<crate::sdk_live::SdkLiveReader>,
 }
 
 impl LiveEventRingSource {
@@ -143,6 +145,10 @@ impl LiveEventRingSource {
     /// # Errors
     ///
     /// Returns an error on unsupported platforms or when the ring path is not readable.
+    #[cfg_attr(
+        not(all(feature = "sdk", target_os = "linux")),
+        allow(clippy::needless_pass_by_value)
+    )]
     pub fn open(config: LiveConfig) -> Result<Self> {
         if !cfg!(target_os = "linux") {
             return Err(Error::Message(
@@ -152,7 +158,32 @@ impl LiveEventRingSource {
 
         let path = resolve_event_ring_path(&config)?;
         crate::validate_readable_path(&path)?;
-        Ok(Self::from_existing_path(config, path, None))
+        if config.channel_capacity == 0 {
+            return Err(Error::Message(
+                "live channel capacity must be greater than zero".to_owned(),
+            ));
+        }
+
+        #[cfg(all(feature = "sdk", target_os = "linux"))]
+        {
+            let reader = crate::sdk_live::SdkLiveReader::open(
+                path.clone(),
+                config.poll_interval_millis,
+                config.channel_capacity,
+            )?;
+            let mut source =
+                Self::from_existing_path(config, path, Some(crate::sdk_live::schema_hash()));
+            source.reader = Some(reader);
+            Ok(source)
+        }
+
+        #[cfg(not(all(feature = "sdk", target_os = "linux")))]
+        {
+            let _ = path;
+            Err(Error::Message(
+                "live event-ring observation requires the `sdk` feature".to_owned(),
+            ))
+        }
     }
 
     /// Creates source metadata for tests or already-validated paths.
@@ -167,7 +198,12 @@ impl LiveEventRingSource {
         if let Some(schema_hash) = schema_hash {
             info = info.with_schema_hash(schema_hash);
         }
-        Self { config, info }
+        Self {
+            config,
+            info,
+            #[cfg(all(feature = "sdk", target_os = "linux"))]
+            reader: None,
+        }
     }
 
     /// Returns live config.
@@ -178,13 +214,24 @@ impl LiveEventRingSource {
 
     /// Polls one descriptor from the live source.
     ///
-    /// v0.1 keeps this observe-only until the Linux SDK-backed reader is active.
-    ///
     /// # Errors
     ///
-    /// Reserved for SDK polling failures once active descriptor polling is wired.
-    pub fn poll_descriptor(&mut self) -> Result<StreamItem<RawExecEvent>> {
-        Ok(StreamItem::SourceEnded)
+    /// Returns SDK reader failures or an error if this source was constructed
+    /// for metadata inspection without opening a reader.
+    pub fn poll_descriptor(&mut self) -> Result<Option<StreamItem<RawExecEvent>>> {
+        #[cfg(all(feature = "sdk", target_os = "linux"))]
+        {
+            return self
+                .reader
+                .as_ref()
+                .ok_or_else(|| Error::Message("live SDK reader is not open".to_owned()))?
+                .try_next();
+        }
+
+        #[cfg(not(all(feature = "sdk", target_os = "linux")))]
+        Err(Error::Message(
+            "live event-ring polling requires Linux and the `sdk` feature".to_owned(),
+        ))
     }
 
     /// Validates live source metadata against an expected schema hash.
