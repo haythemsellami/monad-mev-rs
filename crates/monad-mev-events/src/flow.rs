@@ -35,7 +35,9 @@ impl TransactionFlowKey {
     #[must_use]
     pub const fn txn_ref(self, txn_hash: Option<B256>) -> TxnRef {
         TxnRef {
-            txn_idx: self.txn_id,
+            // Flow extensions reserve zero for `None`, so transaction indexes
+            // are encoded as index + 1 by fixture and live SDK adapters.
+            txn_idx: self.txn_id.saturating_sub(1),
             txn_hash,
         }
     }
@@ -237,13 +239,17 @@ mod tests {
 
     use super::*;
 
-    fn event(seqno: u64, event_type: ExecEventType, txn_id: u64) -> EventEnvelope<RawExecEvent> {
+    fn event(seqno: u64, event_type: ExecEventType, txn_idx: u64) -> EventEnvelope<RawExecEvent> {
         let payload = if matches!(event_type, ExecEventType::TxnHeaderStart) {
-            let byte = u8::try_from(txn_id).expect("fixture txn_id should fit u8");
+            let byte = u8::try_from(txn_idx).expect("fixture txn_idx should fit u8");
             fixture_txn_header_start_payload(B256::from([byte; 32]))
         } else {
             Vec::new()
         };
+
+        let txn_id = txn_idx
+            .checked_add(1)
+            .expect("fixture txn_idx should encode");
 
         fixture_raw_envelope(seqno, event_type, [1, txn_id, 0, 0], payload)
             .expect("fixture event should build")
@@ -331,7 +337,7 @@ mod tests {
         let update = tracker.observe(event(2, ExecEventType::TxnHeaderStart, 2));
 
         assert_eq!(update.evicted.len(), 1);
-        assert_eq!(update.evicted[0].key.txn_id, 1);
+        assert_eq!(update.evicted[0].key.txn_id, 2);
         assert_eq!(tracker.summary().active_flows, 1);
         assert_eq!(tracker.summary().evicted_flows, 1);
     }

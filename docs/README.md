@@ -17,5 +17,8 @@ Core documents:
 - `release-checklist.md`
 - `v0.2/`
 
+The v0.2 directory includes the continuous engine runner used to connect live
+Execution Events to protocol adapters without enabling transaction submission.
+
 Start with the snapshot tutorial for local development. Use the live guide only
 on Linux hosts that can access a Monad execution event ring.
