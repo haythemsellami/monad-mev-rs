@@ -416,7 +416,10 @@ checksum = "b6d2cec3eae94f9f509c767b45932f1ada8350c4bdb85af2fcab4a3c14807981"
 name = "live-observe"
 version = "0.0.0"
 dependencies = [
- "monad-mev-cli",
+ "monad-mev-core",
+ "monad-mev-engine",
+ "monad-mev-events",
+ "serde_json",
 ]
 
 [[package]]

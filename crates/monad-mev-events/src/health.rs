@@ -193,7 +193,10 @@ impl StreamHealthTracker {
     pub fn observe_item<T>(&mut self, item: &StreamItem<T>) -> Result<StreamHealthAction> {
         match item {
             StreamItem::Event(envelope) => self.observe_event(envelope),
-            StreamItem::Gap(gap) => self.handle_gap(gap),
+            StreamItem::Gap(gap) => {
+                self.sequence.reset(gap.observed_seqno.checked_add(1));
+                self.handle_gap(gap)
+            }
             StreamItem::PayloadExpired(expired) => Ok(self.handle_payload_expired(expired)),
             StreamItem::SchemaMismatch(mismatch) => Ok(self.handle_schema_mismatch(mismatch)),
             StreamItem::SourceEnded => Ok(StreamHealthAction::Continue),
@@ -383,6 +386,21 @@ mod tests {
 
         assert_eq!(observer.calls, 1);
         assert_eq!(action, StreamHealthAction::Continue);
+        assert_eq!(tracker.report().gaps, 1);
+    }
+
+    #[test]
+    fn explicit_gap_synchronizes_the_next_expected_sequence() {
+        let mut tracker =
+            StreamHealthTracker::new(EventSourceKind::Live, GapPolicy::LogAndContinue);
+
+        tracker
+            .observe_item::<()>(&StreamItem::Gap(GapEvent::new(2, 5, EventSourceKind::Live)))
+            .expect("explicit gap should continue");
+        tracker
+            .observe_event(&envelope(6))
+            .expect("the event after an explicit gap should not create a duplicate gap");
+
         assert_eq!(tracker.report().gaps, 1);
     }
 }

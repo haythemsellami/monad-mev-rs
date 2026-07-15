@@ -12,6 +12,7 @@ runtime:
 - Decode common EVM and DeFi logs.
 - Run deterministic strategy tests against fixtures and snapshots.
 - Graduate the same event pipeline to live Linux event-ring ingestion in observe-only mode.
+- Run persistent adapters and detectors directly over non-blocking live streams.
 - Capture protocol/application-specific subsets with generic filters.
 - Route events through adapters, state stores, and opportunity detectors.
 - Simulate transaction candidates with auditable state reads.
@@ -53,6 +54,14 @@ cargo run -p monad-mev-cli -- inspect monad-exec-events --live --duration 10s --
 
 On macOS this reports live mode as unavailable. Real live event rings require a
 Linux host with access to a Monad execution event ring.
+
+Run the continuous observe-only engine on that Linux host:
+
+```bash
+MONAD_MEV_EVENT_RING=monad-exec-events \
+MONAD_MEV_DURATION_MILLIS=10000 \
+cargo run -p live-observe
+```
 
 ## Rust API Examples
 

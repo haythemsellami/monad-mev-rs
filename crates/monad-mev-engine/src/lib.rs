@@ -1,5 +1,13 @@
 //! Generic engine runtime for `monad-mev-rs`.
 
+mod continuous;
+
+pub use continuous::{
+    ContinuousControl, ContinuousEngineConfig, ContinuousEngineReport, ContinuousEngineRun,
+    ContinuousEngineRunner, ContinuousStopReason, DetectionBoundary, ShutdownHandle,
+    StreamFaultPolicy,
+};
+
 use std::collections::{BTreeMap, BTreeSet};
 
 use monad_mev_core::{
@@ -549,34 +557,49 @@ impl Engine {
             let StreamItem::Event(event) = item else {
                 continue;
             };
-            run.report.events_seen += 1;
-            let matched = self.captures.is_empty()
-                || self.captures.iter().any(|capture| capture.matches(&event));
-            if !matched {
-                continue;
-            }
+            self.process_event(&mut run, &event)?;
+        }
 
-            run.report.events_captured += 1;
-            for adapter in &mut self.event_adapters {
-                let domain_events = adapter.adapt_event(&event)?;
-                run.report.domain_events += domain_events.len() as u64;
-                for domain_event in domain_events {
-                    for state_adapter in &mut self.state_adapters {
-                        let updates = state_adapter.state_updates(&domain_event)?;
-                        run.report.state_updates += updates.len() as u64;
-                        run.store.apply_all(updates);
-                    }
+        let opportunities = self.detect(&run.store)?;
+        run.report.opportunities += opportunities.len() as u64;
+        run.opportunities.extend(opportunities);
+
+        Ok(run)
+    }
+
+    pub(crate) fn process_event(
+        &mut self,
+        run: &mut EngineRun,
+        event: &EventEnvelope<ChainEvent>,
+    ) -> Result<()> {
+        run.report.events_seen += 1;
+        let matched =
+            self.captures.is_empty() || self.captures.iter().any(|capture| capture.matches(event));
+        if !matched {
+            return Ok(());
+        }
+
+        run.report.events_captured += 1;
+        for adapter in &mut self.event_adapters {
+            let domain_events = adapter.adapt_event(event)?;
+            run.report.domain_events += domain_events.len() as u64;
+            for domain_event in domain_events {
+                for state_adapter in &mut self.state_adapters {
+                    let updates = state_adapter.state_updates(&domain_event)?;
+                    run.report.state_updates += updates.len() as u64;
+                    run.store.apply_all(updates);
                 }
             }
         }
+        Ok(())
+    }
 
+    pub(crate) fn detect(&mut self, store: &InMemoryStateStore) -> Result<Vec<Opportunity>> {
+        let mut opportunities = Vec::new();
         for detector in &mut self.detectors {
-            let opportunities = detector.detect(&run.store)?;
-            run.report.opportunities += opportunities.len() as u64;
-            run.opportunities.extend(opportunities);
+            opportunities.extend(detector.detect(store)?);
         }
-
-        Ok(run)
+        Ok(opportunities)
     }
 }
 

@@ -13,6 +13,19 @@ pub trait ExecutionEventStream {
     fn next_item(&mut self) -> Result<StreamItem<ChainEvent>>;
 }
 
+/// Non-blocking stream contract for finite or continuously produced Execution Events.
+///
+/// `None` means that the source is healthy but no item is currently ready. Finite
+/// sources signal completion with [`StreamItem::SourceEnded`].
+pub trait ExecutionEventPoller {
+    /// Polls the next normalized stream item.
+    ///
+    /// # Errors
+    ///
+    /// Returns source-specific failures.
+    fn poll_next(&mut self) -> Result<Option<StreamItem<ChainEvent>>>;
+}
+
 /// In-memory execution event stream for fixtures, tests, and replay handoff.
 #[derive(Clone, Debug)]
 pub struct VecExecutionEventStream {
@@ -35,6 +48,12 @@ impl ExecutionEventStream for VecExecutionEventStream {
         };
         self.index += 1;
         Ok(item)
+    }
+}
+
+impl ExecutionEventPoller for VecExecutionEventStream {
+    fn poll_next(&mut self) -> Result<Option<StreamItem<ChainEvent>>> {
+        self.next_item().map(Some)
     }
 }
 

@@ -46,7 +46,8 @@ pub use live::{
     bounded_live_channel, default_event_ring_dir, host_supports_live_event_ring,
     live_availability_reason, live_gap_policy_action, normalize_live_stream_item,
     observe_fake_stream, parse_duration_millis, resolve_event_ring_path, LiveConfig,
-    LiveEventRingSource, LiveGapAction, LiveMetrics, DEFAULT_LIVE_RING_NAME,
+    LiveEventRingSource, LiveExecutionEventStream, LiveGapAction, LiveMetrics,
+    DEFAULT_LIVE_RING_NAME,
 };
 pub use normalize::{
     fixture_log_payload, normalize_raw_event, normalize_stream_item, AccountAccessEvent,
@@ -69,8 +70,8 @@ pub use source::{
     ExecEventSource, SchemaPolicy, SchemaValidation, SourceInfo, EXPECTED_EXEC_CONTENT_TYPE,
 };
 pub use stream::{
-    collect_execution_stream, compare_stream_parity, execution_stream_report, ExecutionEventStream,
-    StreamParityComparison, StreamParityReport, VecExecutionEventStream,
+    collect_execution_stream, compare_stream_parity, execution_stream_report, ExecutionEventPoller,
+    ExecutionEventStream, StreamParityComparison, StreamParityReport, VecExecutionEventStream,
 };
 
 /// Git repository that provides the pinned Monad Execution Events Rust SDK.

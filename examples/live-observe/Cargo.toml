@@ -8,7 +8,10 @@ repository.workspace = true
 publish = false
 
 [dependencies]
-monad-mev-cli = { path = "../../crates/monad-mev-cli" }
+monad-mev-core = { path = "../../crates/monad-mev-core" }
+monad-mev-engine = { path = "../../crates/monad-mev-engine" }
+monad-mev-events = { path = "../../crates/monad-mev-events", features = ["live"] }
+serde_json = "1.0"
 
 [lints]
 workspace = true

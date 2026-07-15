@@ -5,8 +5,9 @@ use monad_mev_core::{Error, EventSourceKind, GapEvent, GapPolicy, Result, Stream
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    normalize_stream_item, ExecEventSource, RawExecEvent, SchemaPolicy, SchemaValidation,
-    SourceInfo, EXPECTED_EXEC_CONTENT_TYPE,
+    normalize_raw_event, normalize_stream_item, CommitStateIssue, CommitStateTracker,
+    ExecEventSource, ExecutionEventPoller, RawExecEvent, SchemaPolicy, SchemaValidation,
+    SourceInfo, TransactionFlowSummary, TxnFlowTracker, EXPECTED_EXEC_CONTENT_TYPE,
 };
 
 /// Default shared-memory ring name used by Monad execution events.
@@ -249,6 +250,81 @@ impl ExecEventSource for LiveEventRingSource {
     }
 }
 
+/// Normalized, non-blocking live stream with block and transaction context attached.
+#[derive(Debug)]
+pub struct LiveExecutionEventStream {
+    source: LiveEventRingSource,
+    commit_states: CommitStateTracker,
+    transaction_flows: TxnFlowTracker,
+}
+
+impl LiveExecutionEventStream {
+    /// Opens a live stream from an event-ring configuration.
+    ///
+    /// # Errors
+    ///
+    /// Returns source startup and SDK reader failures.
+    pub fn open(config: LiveConfig) -> Result<Self> {
+        LiveEventRingSource::open(config).map(Self::from_source)
+    }
+
+    /// Wraps an already-open live source.
+    #[must_use]
+    pub fn from_source(source: LiveEventRingSource) -> Self {
+        Self {
+            source,
+            commit_states: CommitStateTracker::new(),
+            transaction_flows: TxnFlowTracker::new(),
+        }
+    }
+
+    /// Returns the underlying source metadata and configuration.
+    #[must_use]
+    pub const fn source(&self) -> &LiveEventRingSource {
+        &self.source
+    }
+
+    /// Returns commit-state issues detected while normalizing live events.
+    #[must_use]
+    pub fn commit_state_issues(&self) -> &[CommitStateIssue] {
+        self.commit_states.issues()
+    }
+
+    /// Returns transaction-flow counters for the live stream.
+    #[must_use]
+    pub fn transaction_flow_summary(&self) -> TransactionFlowSummary {
+        self.transaction_flows.summary()
+    }
+
+    fn normalize_tracked_item(
+        commit_states: &mut CommitStateTracker,
+        transaction_flows: &mut TxnFlowTracker,
+        item: StreamItem<RawExecEvent>,
+    ) -> StreamItem<crate::ChainEvent> {
+        match item {
+            StreamItem::Event(envelope) => {
+                let envelope = commit_states.observe(envelope);
+                let envelope = transaction_flows.observe(envelope).envelope;
+                StreamItem::Event(normalize_raw_event(envelope))
+            }
+            other => normalize_stream_item(other),
+        }
+    }
+}
+
+impl ExecutionEventPoller for LiveExecutionEventStream {
+    fn poll_next(&mut self) -> Result<Option<StreamItem<crate::ChainEvent>>> {
+        let Some(item) = self.source.poll_descriptor()? else {
+            return Ok(None);
+        };
+        Ok(Some(Self::normalize_tracked_item(
+            &mut self.commit_states,
+            &mut self.transaction_flows,
+            item,
+        )))
+    }
+}
+
 /// Live observation counters.
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct LiveMetrics {
@@ -366,10 +442,47 @@ mod tests {
     use monad_mev_core::{EventEnvelope, EventKind, EventMeta, FlowTags, PayloadExpired};
 
     use super::*;
-    use crate::{fixture_raw_envelope, ExecEventType};
+    use crate::{fixture_block_tag_payload, fixture_raw_envelope, ExecEventType};
 
     fn hash(byte: u8) -> B256 {
         B256::from([byte; 32])
+    }
+
+    #[test]
+    fn live_stream_attaches_block_and_transaction_context_before_normalizing() {
+        let block_id = hash(9);
+        let mut commits = CommitStateTracker::new();
+        let mut flows = TxnFlowTracker::new();
+        let start = fixture_raw_envelope(
+            10,
+            ExecEventType::BlockStart,
+            [0; 4],
+            fixture_block_tag_payload(block_id, 77),
+        )
+        .expect("block start fixture");
+        let log = fixture_raw_envelope(11, ExecEventType::TxnLog, [10, 4, 0, 0], Vec::new())
+            .expect("transaction log fixture");
+
+        let _ = LiveExecutionEventStream::normalize_tracked_item(
+            &mut commits,
+            &mut flows,
+            StreamItem::Event(start),
+        );
+        let normalized = LiveExecutionEventStream::normalize_tracked_item(
+            &mut commits,
+            &mut flows,
+            StreamItem::Event(log),
+        );
+        let StreamItem::Event(normalized) = normalized else {
+            panic!("expected normalized event");
+        };
+
+        assert_eq!(
+            normalized.meta.commit_state,
+            monad_mev_core::CommitState::Proposed
+        );
+        assert_eq!(normalized.block_number(), Some(77));
+        assert_eq!(normalized.txn_idx(), Some(3));
     }
 
     #[test]
