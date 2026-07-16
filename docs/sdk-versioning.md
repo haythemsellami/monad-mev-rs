@@ -82,6 +82,11 @@ ring conformance run is required before a stable tag.
 The official SDK requires native tooling because its Rust crates bind to the C
 event-ring implementation.
 
+The workspace minimum supported Rust version is 1.85, matching the Edition
+2024 requirement of the locked Alloy/cryptography dependency graph. CI checks
+that exact toolchain rather than treating the current stable compiler as an
+MSRV proxy.
+
 Ubuntu requirements:
 
 - Rust toolchain.
