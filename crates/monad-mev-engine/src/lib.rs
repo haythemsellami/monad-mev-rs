@@ -104,10 +104,7 @@ impl CaptureFilter {
         }
 
         if let Some(from_block) = self.from_block {
-            if event
-                .block_number()
-                .map_or(true, |block| block < from_block)
-            {
+            if event.block_number().is_none_or(|block| block < from_block) {
                 reasons.push(format!(
                     "block {:?} is before {from_block}",
                     event.block_number()
@@ -117,7 +114,7 @@ impl CaptureFilter {
         }
 
         if let Some(to_block) = self.to_block {
-            if event.block_number().map_or(true, |block| block > to_block) {
+            if event.block_number().is_none_or(|block| block > to_block) {
                 reasons.push(format!(
                     "block {:?} is after {to_block}",
                     event.block_number()
@@ -144,7 +141,7 @@ impl CaptureFilter {
             if !self.addresses.is_empty()
                 && log
                     .address
-                    .map_or(true, |addr| !self.addresses.contains(&addr))
+                    .is_none_or(|addr| !self.addresses.contains(&addr))
             {
                 reasons.push(format!("address {:?} not selected", log.address));
                 return CaptureDecision::ignored(&self.name, reasons);
@@ -152,7 +149,7 @@ impl CaptureFilter {
             if !self.topic0.is_empty()
                 && log
                     .topic0()
-                    .map_or(true, |topic| !self.topic0.contains(&topic))
+                    .is_none_or(|topic| !self.topic0.contains(&topic))
             {
                 reasons.push(format!("topic0 {:?} not selected", log.topic0()));
                 return CaptureDecision::ignored(&self.name, reasons);

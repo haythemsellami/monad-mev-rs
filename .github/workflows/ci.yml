@@ -69,13 +69,13 @@ jobs:
       - run: cargo check -p monad-mev-events --all-targets --features live
 
   msrv:
-    name: MSRV 1.85
+    name: MSRV 1.90
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: 1.85.0
+          toolchain: 1.90.0
       - run: cargo check --workspace --all-targets --all-features
 
   docs:
