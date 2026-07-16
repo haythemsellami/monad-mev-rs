@@ -1,47 +1,41 @@
 # SDK Versioning
 
-Status date: 2026-05-22
+Status date: 2026-07-15
 
-This document records the Monad Execution Events Rust SDK source pinned by `monad-mev-rs` v0.1.
+This document records the Monad Execution Events Rust SDK source used by
+`monad-mev-rs` 0.1.
 
 ## Pinned SDK
 
-v0.1 pins the SDK to:
+The integration records the official v1.1 baseline and pins active Cargo
+dependencies to an exact compatibility revision:
 
 ```text
 repository: https://github.com/category-labs/monad
 tag:        release/exec-events-sdk-v1.1
-commit:     b7c13e1565f40556cb717090eae245e34bb5c6e7
+tag commit: b7c13e1565f40556cb717090eae245e34bb5c6e7
+revision:   4f2289307196a1b70dfa1fb5282600a07ca40767
 ```
 
-The SDK crates live in the execution repository under:
+The tag identifies the upstream SDK release line. Cargo uses the exact
+`revision`, which is the only commit compiled by the active integration. The
+SDK crates live in the execution repository under:
 
 ```text
 rust/crates/monad-event-ring
 rust/crates/monad-exec-events
 ```
 
-The local SDK pin metadata is intentionally isolated to `crates/monad-mev-events`.
+All pin metadata and direct SDK dependencies are isolated to
+`crates/monad-mev-events`.
 
 ## Why SDK v1.1
 
-The Monad Execution Events release notes say v1.1 moved the Rust SDK from the consensus repository to the execution repository.
+The Monad Execution Events v1.1 release moved the Rust SDK from the consensus
+repository to the execution repository. Older v1.0 examples use
+`category-labs/monad-bft`; those dependencies are not used here.
 
-The older Rust getting-started page still shows v1.0 snippets from `category-labs/monad-bft`:
-
-```toml
-[dependencies.monad-exec-events]
-git = "https://github.com/category-labs/monad-bft"
-tag = "release/exec-events-sdk-v1.0"
-
-[dependencies.monad-event-ring]
-git = "https://github.com/category-labs/monad-bft"
-tag = "release/exec-events-sdk-v1.0"
-```
-
-Those snippets are useful historical context, but v0.1 should use the newer v1.1 execution-repo tag.
-
-References:
+Upstream references:
 
 - https://docs.monad.xyz/execution-events/release-notes
 - https://docs.monad.xyz/execution-events/getting-started/rust
@@ -49,89 +43,67 @@ References:
 
 ## Cargo Feature Policy
 
-`monad-mev-events` reserves an explicit `sdk` feature for upstream SDK-backed APIs:
+`monad-mev-events` uses explicit `sdk` and `live` features:
 
 ```bash
-cargo test -p monad-mev-events
-cargo test -p monad-mev-events --features sdk
+cargo test -p monad-mev-events --no-default-features
+cargo test -p monad-mev-events --features live
 ```
 
-Default builds should stay fast and should not require the upstream SDK toolchain.
+The dependencies are active only for Linux targets. macOS builds retain replay,
+snapshot, normalization, and diagnostic APIs without compiling the native live
+event-ring SDK.
 
-This feature gate is pragmatic. The official docs state that the first SDK build fetches the upstream repo and transitive git submodules, most of which are not needed by the SDK but are checked out by Cargo by default.
-
-During WP-02, active optional git dependencies were tested and found to trigger the upstream fetch even for ordinary `cargo test` lockfile resolution. To keep default development usable, WP-02 records the exact pinned dependency declarations but defers activating them in `Cargo.toml` until the ingestion work packages decide the fetch/vendor strategy.
-
-## Dependency Declarations
-
-The pinned SDK dependency declarations are:
+The active declarations are:
 
 ```toml
-[dependencies]
-monad-event-ring = { git = "https://github.com/category-labs/monad", tag = "release/exec-events-sdk-v1.1", package = "monad-event-ring", optional = true }
-monad-exec-events = { git = "https://github.com/category-labs/monad", tag = "release/exec-events-sdk-v1.1", package = "monad-exec-events", optional = true }
+[target.'cfg(target_os = "linux")'.dependencies]
+monad-event-ring = { git = "https://github.com/category-labs/monad", rev = "4f2289307196a1b70dfa1fb5282600a07ca40767", optional = true }
+monad-exec-events = { git = "https://github.com/category-labs/monad", rev = "4f2289307196a1b70dfa1fb5282600a07ca40767", optional = true }
 
 [features]
 default = []
+live = ["sdk"]
 sdk = ["dep:monad-event-ring", "dep:monad-exec-events"]
 ```
 
-No other v0.1 crate should depend directly on `monad-event-ring` or `monad-exec-events`.
-
-When these dependencies are activated, they must be activated only in `crates/monad-mev-events`.
-
 ## Schema Compatibility
 
-The upstream `monad-exec-events` crate exposes the execution event schema hash through `ExecEventDecoder::ring_schema_hash()`.
+The upstream `monad-exec-events` crate exposes the compiled schema hash through
+`ExecEventDecoder::ring_schema_hash()`. The live source attaches that hash to
+framework source metadata and copied descriptors.
 
-`monad-mev-events` should expose this through:
-
-```rust
-monad_mev_events::exec_event_schema_hash()
-monad_mev_events::exec_event_schema_hash_hex()
-```
-
-These APIs should be available only when the `sdk` feature is enabled and the upstream dependencies are active.
-
-v0.1 ingestion code must compare the compiled SDK schema hash against the schema hash recorded in a live event ring or snapshot before decoding payloads. A mismatch must be treated as a compatibility error by default.
+Missing or mismatched schemas are compatibility errors by default. Warning and
+skip behavior require explicit caller configuration. A real snapshot and live
+ring conformance run is required before a stable tag.
 
 ## Platform Dependencies
 
-The official Rust SDK build currently requires native tooling because the Rust crates bind to the C event-ring implementation.
+The official SDK requires native tooling because its Rust crates bind to the C
+event-ring implementation.
 
-Ubuntu requirements listed by the docs:
+Ubuntu requirements:
 
 - Rust toolchain.
-- `git`.
-- `curl`.
-- C compiler: `gcc-13` or `clang-19`.
-- C++ compiler: `g++-13` or `clang-19`.
+- `git` and `curl`.
+- GCC 13 or Clang 19.
 - CMake 3.23 or newer.
 - `libzstd-dev`.
-- `libhugetlbfs-dev` for live shared-memory ring path resolution.
-- `clang-19` or a recent enough `libclang` for bindgen.
+- `libhugetlbfs-dev` for live shared-memory ring resolution.
+- Clang 19/libclang 19 or newer for C23-compatible bindgen.
 
-macOS snapshot development:
-
-- Live mode is not supported because it requires a Linux host running a Monad node.
-- Historical snapshot mode can compile and run.
-- `libhugetlbfs` is not required.
-- `libzstd`, CMake, and a recent LLVM/clang/libclang are required.
+macOS supports snapshots, fixtures, examples, and non-live framework APIs. A
+real live ring requires Linux and access to a Monad node.
 
 ## License Decision
 
-The Category Labs `monad` and `monad-bft` repositories are GPL-3.0 licensed. The SDK crate source also carries GPL-3.0-or-later headers.
-
-Because `monad-mev-rs` links the SDK directly when the `sdk` feature is enabled, this repository uses:
-
-```text
-GPL-3.0-or-later
-```
-
-The root `NOTICE` file records the pinned upstream SDK source.
+The Category Labs `monad` repository and SDK sources are GPL-3.0-or-later.
+Because `monad-mev-rs` links the SDK directly when enabled, this repository uses
+GPL-3.0-or-later. `NOTICE` records the baseline tag and exact active revision.
 
 ## Known Build Friction
 
-The first SDK-backed Cargo build can be slow because Cargo fetches the execution repository and its submodules. During WP-02, `cargo test -p monad-mev-events sdk` began fetching upstream submodules and was stopped after several minutes without reaching compilation.
-
-Default v0.1 checks avoid this by not activating the upstream git dependencies yet. SDK-backed checks should still be run before implementing or releasing ingestion code.
+Cargo may fetch more of the upstream execution repository than these two SDK
+crates require. Linux all-feature CI therefore takes longer than replay-only
+builds. Linux CI compiles the native SDK path on every change, while macOS CI
+covers replay and cross-platform public APIs.

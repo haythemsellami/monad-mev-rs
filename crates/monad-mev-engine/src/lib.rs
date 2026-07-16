@@ -663,7 +663,7 @@ impl EventAdapter for FixtureDomainAdapter {
         capabilities.insert(PackageCapability::EventAdapter);
         AdapterMetadata {
             name: "fixture-domain".to_owned(),
-            version: "0.0.0".to_owned(),
+            version: env!("CARGO_PKG_VERSION").to_owned(),
             capabilities,
         }
     }

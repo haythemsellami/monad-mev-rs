@@ -15,6 +15,7 @@ Core documents:
 - `ignored-tests.md`
 - `v0.1-hardening-review.md`
 - `release-checklist.md`
+- `release-scope.md`
 - `v0.2/`
 
 The v0.2 directory includes the continuous engine runner used to connect live

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.1.0] - Unreleased
 
 - Added replay-first core event, health, replay, strategy, and executor APIs.
 - Added Monad execution event raw conversion and normalized chain events.
@@ -15,3 +15,8 @@
 - Added generic lifecycle harness CLI and fixture.
 - Added v0.2 documentation for capture, packages, engine, state, simulation,
   risk, execution, and production operations.
+- Added SDK-backed live Linux ingestion and continuous normalized engine runs.
+- Added explicit stream-fault policy, cooperative shutdown, and persistent
+  opportunity detection across live polls.
+- Standardized workspace versioning and release metadata for the first Git
+  release line.

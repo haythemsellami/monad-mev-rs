@@ -61,7 +61,11 @@ impl CliOutcome {
 /// Returns the help text.
 #[must_use]
 pub const fn help_text() -> &'static str {
-    "monad-mev 0.0.0\n\nUsage: monad-mev [GLOBAL] <command> [OPTIONS]\n       monad-mev --help\n       monad-mev --version\n\nGlobal options:\n  --json                 Emit structured JSON when the command supports it\n  --no-color             Disable colored output\n  --log-level <level>    Set diagnostic verbosity\n\nCommands:\n  doctor                 Print environment and SDK diagnostics\n  inspect                Summarize a fixture or snapshot-like source\n  decode                 Decode fixture events to JSONL\n  replay                 Replay fixture events with deterministic filters\n  lifecycle              Run the generic v0.2 lifecycle harness\n  strategy new <path>    Create a compiling strategy scaffold\n"
+    concat!(
+        "monad-mev ",
+        env!("CARGO_PKG_VERSION"),
+        "\n\nUsage: monad-mev [GLOBAL] <command> [OPTIONS]\n       monad-mev --help\n       monad-mev --version\n\nGlobal options:\n  --json                 Emit structured JSON when the command supports it\n  --no-color             Disable colored output\n  --log-level <level>    Set diagnostic verbosity\n\nCommands:\n  doctor                 Print environment and SDK diagnostics\n  inspect                Summarize a fixture or snapshot-like source\n  decode                 Decode fixture events to JSONL\n  replay                 Replay fixture events with deterministic filters\n  lifecycle              Run the generic v0.2 lifecycle harness\n  strategy new <path>    Create a compiling strategy scaffold\n"
+    )
 }
 
 /// Returns the version text.
@@ -231,7 +235,7 @@ fn command_doctor(
     }
 
     Ok(CliOutcome::ok(format!(
-        "status: ok\nversion: {VERSION}\ncore: {}\nhost: {} {}\nfixtures: {}\nlive: {} ({live_reason})\nsdk: {} {} {}\n",
+        "status: ok\nversion: {VERSION}\ncore: {}\nhost: {} {}\nfixtures: {}\nlive: {} ({live_reason})\nsdk: {} {} (tag commit {}, active revision {})\n",
         monad_mev_core::VERSION,
         std::env::consts::OS,
         std::env::consts::ARCH,
@@ -239,7 +243,8 @@ fn command_doctor(
         if live_supported { "supported" } else { "unavailable" },
         sdk.repository,
         sdk.tag,
-        sdk.commit,
+        sdk.tag_commit,
+        sdk.revision,
     )))
 }
 
@@ -1001,6 +1006,7 @@ mod tests {
     #[test]
     fn help_mentions_binary_name() {
         assert!(help_text().contains(BIN_NAME));
+        assert!(help_text().contains(VERSION));
         assert!(help_text().contains("doctor"));
     }
 
