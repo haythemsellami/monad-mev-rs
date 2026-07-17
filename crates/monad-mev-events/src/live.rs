@@ -41,7 +41,7 @@ impl Default for LiveConfig {
             poll_interval_millis: 10,
             channel_capacity: 1024,
             gap_policy: GapPolicy::RiskOffThenFail,
-            schema_policy: SchemaPolicy::Warn,
+            schema_policy: SchemaPolicy::RequireMatch,
         }
     }
 }
@@ -500,6 +500,14 @@ mod tests {
         let path = resolve_event_ring_path(&config).expect("path");
 
         assert!(path.ends_with(Path::new("monad-test-ring")));
+    }
+
+    #[test]
+    fn live_config_requires_matching_schema_by_default() {
+        assert_eq!(
+            LiveConfig::default().schema_policy,
+            SchemaPolicy::RequireMatch
+        );
     }
 
     #[test]

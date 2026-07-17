@@ -341,7 +341,7 @@ fn parse_address(value: &str) -> Result<Address> {
 
 fn parse_hex_bytes(value: &str) -> Result<Vec<u8>> {
     let hex = value.strip_prefix("0x").unwrap_or(value);
-    if hex.len() % 2 != 0 {
+    if !hex.len().is_multiple_of(2) {
         return Err(Error::Message(format!(
             "hex byte string `{value}` must have an even length"
         )));

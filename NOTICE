@@ -1,10 +1,11 @@
 monad-mev-rs links to the Monad Execution Events Rust SDK when the
 `monad-mev-events/sdk` feature is enabled.
 
-The pinned SDK source for v0.1 is:
+The SDK source baseline and active revision for v0.1 are:
 
 https://github.com/category-labs/monad
-tag: release/exec-events-sdk-v1.1
-commit: b7c13e1565f40556cb717090eae245e34bb5c6e7
+baseline tag: release/exec-events-sdk-v1.1
+tag commit:  b7c13e1565f40556cb717090eae245e34bb5c6e7
+revision:    4f2289307196a1b70dfa1fb5282600a07ca40767
 
 The upstream Monad execution repository is licensed GPL-3.0-or-later.

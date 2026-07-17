@@ -4,6 +4,9 @@
 testing, replaying, simulating, and executing Monad searcher, monitoring, and
 MEV-style applications.
 
+The first supported release line is `0.1.x`. It is distributed from Git while
+the public API is hardened; crates remain intentionally unpublished.
+
 The framework now includes the v0.1 replay foundation and v0.2 generic MEV
 runtime:
 
